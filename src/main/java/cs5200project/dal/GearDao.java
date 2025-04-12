@@ -43,11 +43,13 @@ public class GearDao {
 
 	public static Gear getGearByItemID(Connection cxn, int itemID)
 			throws SQLException {
-		String selectGear = "SELECT i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity, " +
-						   "g.requiredLevel " +
-						   "FROM Gear g " +
-						   "JOIN Item i ON g.itemID = i.itemID " +
-						   "WHERE g.itemID = ?;";
+		String selectGear = """
+			SELECT i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity,
+			       g.requiredLevel
+			FROM Gear g
+			JOIN Item i ON g.itemID = i.itemID
+			WHERE g.itemID = ?;
+			""";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectGear)) {
 			selectStmt.setInt(1, itemID);
 			try (ResultSet results = selectStmt.executeQuery()) {
@@ -69,10 +71,12 @@ public class GearDao {
 
 	public static List<Gear> getGearsByRequiredLevel(Connection cxn,
 			int requiredLevel) throws SQLException {
-		String selectGear = "SELECT i.itemID, i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity " +
-						   "FROM Gear g " +
-						   "JOIN Item i ON g.itemID = i.itemID " +
-						   "WHERE g.requiredLevel = ?;";
+		final String selectGear = """
+			SELECT i.itemID, i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity
+			FROM Gear g
+			JOIN Item i ON g.itemID = i.itemID
+			WHERE g.requiredLevel = ?;
+			""";
 		List<Gear> gearList = new ArrayList<>();
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectGear)) {
 			selectStmt.setInt(1, requiredLevel);
@@ -103,9 +107,5 @@ public class GearDao {
 
 	public static void delete(Connection cxn, Gear gear) throws SQLException {
 		ItemDao.delete(cxn, gear);
-	}
-
-	public static Gear getGearById(Connection cxn, int itemID) throws SQLException {
-		return getGearByItemID(cxn, itemID);
 	}
 }

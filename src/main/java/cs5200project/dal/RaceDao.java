@@ -5,69 +5,46 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 
 import cs5200project.model.Player;
 import cs5200project.model.Race;
 
 public class RaceDao {
-	private static RaceDao instance = null;
-
 	private RaceDao() {
 	}
 
-	public static RaceDao getInstance() {
-		if (instance == null) {
-			instance = new RaceDao();
+	public static Race create(Connection cxn, String raceName) throws SQLException {
+		final String insertRace = """
+			INSERT INTO Race(raceName)
+			VALUES (?);
+		""";
+
+		try (PreparedStatement insertStmt = cxn.prepareStatement(insertRace,
+				Statement.RETURN_GENERATED_KEYS)) {
+			insertStmt.setString(1, raceName);
+			insertStmt.executeUpdate();
+
+			return new Race(Utils.getAutoIncrementKey(insertStmt), raceName);
 		}
-		return instance;
 	}
 
-	public Race create(Connection conn, String raceName) throws SQLException {
-		String sql = "INSERT INTO Race(raceName) VALUES(?);";
-		try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-			ps.setString(1, raceName);
-			ps.executeUpdate();
-			
-			try (ResultSet keys = ps.getGeneratedKeys()) {
-				if (keys.next()) {
-					return new Race(keys.getInt(1), raceName);
+	public static Race getRaceById(Connection cxn, int raceId)
+			throws SQLException {
+		final String selectRace = """
+			SELECT * FROM Race 
+			WHERE raceID = ?;
+		""";
+		try (PreparedStatement selectStmt = cxn.prepareStatement(selectRace)) {
+			selectStmt.setInt(1, raceId);
+			try (ResultSet results = selectStmt.executeQuery()) {
+				if (results.next()) {
+					String raceName = results.getString("raceName");
+					return new Race(raceId, raceName);
+				} else {
+					return null;
 				}
-				throw new SQLException("Failed to get generated key.");
 			}
 		}
-	}
-
-	public Race getById(Connection conn, int raceId) throws SQLException {
-		String sql = "SELECT raceID, raceName FROM Race WHERE raceID = ?;";
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, raceId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return new Race(
-						rs.getInt("raceID"),
-						rs.getString("raceName")
-					);
-				}
-				return null;
-			}
-		}
-	}
-
-	public List<Race> getAll(Connection conn) throws SQLException {
-		String sql = "SELECT raceID, raceName FROM Race;";
-		List<Race> races = new ArrayList<>();
-		try (PreparedStatement ps = conn.prepareStatement(sql);
-			 ResultSet rs = ps.executeQuery()) {
-			while (rs.next()) {
-				races.add(new Race(
-					rs.getInt("raceID"),
-					rs.getString("raceName")
-				));
-			}
-		}
-		return races;
 	}
 
 	public static void delete(Connection cxn, Race race) throws SQLException {

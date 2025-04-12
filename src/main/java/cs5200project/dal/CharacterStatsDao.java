@@ -1,72 +1,30 @@
 package cs5200project.dal;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import cs5200project.model.CharacterStats;
-import cs5200project.model.GameCharacter;
+import cs5200project.model.Character;
 import cs5200project.model.Statistic;
+import java.sql.*;
+import java.util.*;
 
 public class CharacterStatsDao {
-    private static CharacterStatsDao instance = null;
-    private StatisticDao statisticDao;
-
-    protected CharacterStatsDao() {
-        statisticDao = StatisticDao.getInstance();
+    // Dao classes should not be instantiated.
+    // Pass Connection object as parameter in each method
+    // Each method should be static
+    private CharacterStatsDao() {
+        // Private constructor to prevent instantiation
     }
 
-    public static CharacterStatsDao getInstance() {
-        if (instance == null) {
-            instance = new CharacterStatsDao();
+    public static CharacterStats create(Connection connection, Character character, Statistic stat, int charValue) throws SQLException {
+        String insertQuery = "INSERT INTO `CharacterStats` (characterID, statID, value) VALUES (?, ?, ?)";
+        
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+            statement.setInt(1, character.getCharacterID());
+            statement.setInt(2, stat.getStatisticID());
+            statement.setInt(3, charValue);
+            
+            statement.executeUpdate();
         }
-        return instance;
-    }
-
-    public List<CharacterStats> getByCharacterID(Connection conn, GameCharacter character) throws SQLException {
-        String sql = 
-            "SELECT cs.characterID, cs.statID, cs.currentValue, " +
-            "s.statTypeID, s.baseValue, " +
-            "st.statName, st.description " +
-            "FROM CharacterStats cs " +
-            "JOIN Statistic s ON cs.statID = s.statID " +
-            "JOIN StatType st ON s.statTypeID = st.statTypeID " +
-            "WHERE cs.characterID = ?;";
-
-        List<CharacterStats> stats = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, character.getCharacterID());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Statistic stat = new Statistic(
-                        rs.getInt("statID"),
-                        rs.getInt("statTypeID"),
-                        rs.getInt("baseValue")
-                    );
-                    CharacterStats characterStat = new CharacterStats(
-                        character,
-                        stat,
-                        rs.getInt("currentValue")
-                    );
-                    stats.add(characterStat);
-                }
-            }
-        }
-        return stats;
-    }
-
-    public CharacterStats create(Connection conn, GameCharacter character, Statistic stat, int currentValue) throws SQLException {
-        String sql = "INSERT INTO CharacterStats(characterID, statID, currentValue) VALUES(?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, character.getCharacterID());
-            ps.setInt(2, stat.getStatID());
-            ps.setInt(3, currentValue);
-            ps.executeUpdate();
-            return new CharacterStats(character, stat, currentValue);
-        }
+        return new CharacterStats(character.getCharacterID(), stat.getStatisticID(), charValue);
     }
 
     public static List<CharacterStats> getStatsByCharacterId(Connection cxn, int characterID) throws SQLException {

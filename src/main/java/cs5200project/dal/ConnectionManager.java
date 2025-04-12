@@ -23,41 +23,15 @@ import java.util.Properties;
  */
 public class ConnectionManager {
 
-  private final static String DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
-  private final static String URL = "jdbc:mysql://localhost:3306/GameDB";
-  private final static String USER = "root";
-  private final static String PASSWORD = "password";
-  
-  static {
-    try {
-      Class.forName(DRIVER_CLASS);
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-      throw new RuntimeException("Failed to load MySQL driver", e);
-    }
-  }
-  
-  public static Connection getConnection() throws SQLException {
-    Properties info = new Properties();
-    info.put("user", USER);
-    info.put("password", PASSWORD);
-    return DriverManager.getConnection(URL, info);
-  }
-  
-  public static void closeConnection(Connection connection) {
-    if (connection != null) {
-      try {
-        connection.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
-  }
+  /**
+   * Private default constructor to prevent instantiation.
+   */
+  private ConnectionManager() { }
 
   // User to connect to your database instance. By default, this is "root2".
-  private static final String USER_DEFAULT = "root2";
+  private static final String USER = "root";
   // Password for the user.
-  private static final String PASSWORD_DEFAULT = "NMUvn9s8";
+	private static final String PASSWORD = "NMUvn9s8";
   // URI to your database server. If running on the same machine, then
   // this is "localhost".
   private static final String HOSTNAME = "localhost";
@@ -67,40 +41,39 @@ public class ConnectionManager {
   private static final String SCHEMA = "cs5200project";
   // Default timezone for MySQL server.
   private static final String TIMEZONE = "UTC";
-  // SSL setting
-  private static final String SSL = "false";
-
-  /**
-   * Private default constructor to prevent instantiation.
-   */
-  private ConnectionManager() { }
 
   /** Get the connection to the database instance. */
-  public static Connection getConnectionDefault() throws SQLException {
-    Properties connectionProperties = new Properties();
-    connectionProperties.put("user", USER_DEFAULT);
-    connectionProperties.put("password", PASSWORD_DEFAULT);
-    connectionProperties.put("serverTimezone", TIMEZONE);
-    connectionProperties.put("useSSL", SSL);
+  public static Connection getConnection() throws SQLException {
+    Connection connection = null;
     try {
+      Properties connectionProperties = new Properties();
+      connectionProperties.put("user", USER);
+      connectionProperties.put("password", PASSWORD);
+      connectionProperties.put("serverTimezone", TIMEZONE);
       // Ensure the JDBC driver is loaded by retrieving the runtime
       // Class descriptor.  Otherwise, Tomcat may have issues loading
       // libraries in the proper order.  One alternative is calling
       // this in the HttpServlet init() override.
-      Class.forName("com.mysql.cj.jdbc.Driver");
-    } catch (ClassNotFoundException e) {
+      try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+        throw new SQLException(e);
+      }
+      connection = DriverManager.getConnection(
+        String.format(
+          "jdbc:mysql://%s:%d/%s?useSSL=false&allowPublicKeyRetrieval=true",
+          HOSTNAME,
+          PORT,
+          SCHEMA
+        ),
+        connectionProperties
+      );
+    } catch (SQLException e) {
       e.printStackTrace();
-      throw new SQLException(e);
+      throw e;
     }
-    return DriverManager.getConnection(
-      String.format(
-        "jdbc:mysql://%s:%d/%s?useSSL=false&allowPublicKeyRetrieval=true",
-        HOSTNAME,
-        PORT,
-        SCHEMA
-      ),
-      connectionProperties
-    );
+    return connection;
   }
 
   /**
@@ -110,16 +83,9 @@ public class ConnectionManager {
    */
   public static Connection getSchemalessConnection() throws SQLException {
     Properties connectionProperties = new Properties();
-    connectionProperties.put("user", USER_DEFAULT);
-    connectionProperties.put("password", PASSWORD_DEFAULT);
+    connectionProperties.put("user", USER);
+    connectionProperties.put("password", PASSWORD);
     connectionProperties.put("serverTimezone", TIMEZONE);
-    connectionProperties.put("useSSL", SSL);
-    try {
-      Class.forName("com.mysql.cj.jdbc.Driver");
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-      throw new SQLException(e);
-    }
     return DriverManager.getConnection(
       String.format(
         "jdbc:mysql://%s:%d?useSSL=false&allowPublicKeyRetrieval=true",

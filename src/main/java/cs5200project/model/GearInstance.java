@@ -5,11 +5,11 @@ import java.util.Objects;
 public class GearInstance {
 	private int gearInstanceID;
 	private Item item;
-	private GameCharacter character;
+	private Character character;
 	private GearSlot gearSlot;
 
 	public GearInstance(int gearInstanceID, GearSlot gearSlot,
-			GameCharacter character, Item item) {
+			Character character, Item item) {
 		this.gearInstanceID = gearInstanceID;
 		this.item = item;
 		this.character = character;
@@ -36,11 +36,11 @@ public class GearInstance {
 		return item != null ? item.getItemId() : 0;
 	}
 
-	public GameCharacter getCharacter() {
+	public Character getCharacter() {
 		return character;
 	}
 
-	public void setCharacter(GameCharacter character) {
+	public void setCharacter(Character character) {
 		this.character = character;
 	}
 
@@ -52,13 +52,6 @@ public class GearInstance {
 		this.gearSlot = gearSlot;
 	}
 
-	public int getCharacterId() {
-		return character != null ? character.getCharacterID() : 0;
-	}
-
-	public int getGearSlotId() {
-		return gearSlot != null ? gearSlot.getSlotID() : 0;
-	}
 
 	@Override
 	public int hashCode() {

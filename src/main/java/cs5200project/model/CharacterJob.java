@@ -1,74 +1,78 @@
 package cs5200project.model;
 
+import java.util.Objects;
+
 public class CharacterJob {
-    private GameCharacter character;
-    private Job job;
+    private int characterID;
+    private int jobID;
     private boolean isUnlocked;
-    private int jobLevel;
+    private int xp;
 
-    public CharacterJob(GameCharacter character, Job job, boolean isUnlocked, int jobLevel) {
-        this.character = character;
-        this.job = job;
+    public CharacterJob(int characterID, int jobID, boolean isUnlocked, int xp) {
+        this.characterID = characterID;
+        this.jobID = jobID;
         this.isUnlocked = isUnlocked;
-        this.jobLevel = jobLevel;
+        this.xp = xp;
     }
 
-    public GameCharacter getCharacter() {
-        return character;
+    // Getters and Setters
+    public int getCharacterID() { 
+        return characterID; 
+    }
+    
+    public void setCharacterID(int characterID) { 
+        this.characterID = characterID; 
     }
 
-    public void setCharacter(GameCharacter character) {
-        this.character = character;
+    public int getJobID() { 
+        return jobID; 
+    }
+    
+    public void setJobID(int jobID) { 
+        this.jobID = jobID; 
     }
 
-    public Job getJob() {
-        return job;
+    public boolean isUnlocked() { 
+        return isUnlocked; 
+    }
+    
+    public void setUnlocked(boolean unlocked) { 
+        isUnlocked = unlocked; 
     }
 
-    public void setJob(Job job) {
-        this.job = job;
+    public int getXp() { 
+        return xp; 
     }
-
-    public boolean isUnlocked() {
-        return isUnlocked;
+    
+    public void setXp(int xp) { 
+        this.xp = xp; 
     }
-
-    public void setUnlocked(boolean isUnlocked) {
-        this.isUnlocked = isUnlocked;
-    }
-
-    public int getJobLevel() {
-        return jobLevel;
-    }
-
-    public void setJobLevel(int jobLevel) {
-        this.jobLevel = jobLevel;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("CharacterJob[character=%s, job=%s, isUnlocked=%b, jobLevel=%d]",
-            character, job, isUnlocked, jobLevel);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        CharacterJob other = (CharacterJob) obj;
-        return character.equals(other.character) &&
-               job.equals(other.job) &&
-               isUnlocked == other.isUnlocked &&
-               jobLevel == other.jobLevel;
-    }
-
+    
     @Override
     public int hashCode() {
-        int result = 17;
-        result = 31 * result + character.hashCode();
-        result = 31 * result + job.hashCode();
-        result = 31 * result + (isUnlocked ? 1 : 0);
-        result = 31 * result + jobLevel;
-        return result;
+        return Objects.hash(characterID, jobID, isUnlocked, xp);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+            
+        CharacterJob other = (CharacterJob) obj;
+        return characterID == other.characterID 
+                && jobID == other.jobID
+                && isUnlocked == other.isUnlocked
+                && xp == other.xp;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format(
+                "CharacterJob(characterID=%d, jobID=%d, isUnlocked=%s, xp=%d)",
+                characterID, jobID, isUnlocked, xp);
     }
 }

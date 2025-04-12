@@ -1,3 +1,4 @@
+
 package cs5200project.dal;
 
 import java.sql.Connection;
@@ -7,7 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import cs5200project.model.GameCharacter;
+import cs5200project.model.Character;
 import cs5200project.model.InventorySlot;
 import cs5200project.model.Item;
 
@@ -15,12 +16,12 @@ public class InventorySlotDao {
 	private InventorySlotDao() {
 	}
 
-	public static InventorySlot create(Connection cxn, GameCharacter character,
+	public static InventorySlot create(Connection cxn, Character character,
 			int slotNumber, Item item, int quantityStacked)
 			throws SQLException {
-		String insertInventorySlot = 
-			"INSERT INTO InventorySlot (characterID, slotNumber, itemID, quantityStacked) " +
-			"VALUES (?, ?, ?, ?);";
+		String insertInventorySlot = """
+				INSERT INTO InventorySlot (characterID, slotNumber, itemID, quantityStacked)
+				VALUES (?, ?, ?, ?);""";
 		try (PreparedStatement insertStmt = cxn
 				.prepareStatement(insertInventorySlot)) {
 			insertStmt.setInt(1, character.getCharacterID());
@@ -34,11 +35,12 @@ public class InventorySlotDao {
 	}
 
 	public static InventorySlot getInventorySlotByCharacterIdAndSlotNumber(
-			Connection cxn, GameCharacter character, int slotNumber)
+			Connection cxn, Character character, int slotNumber)
 			throws SQLException {
-		String selectSlot = 
-			"SELECT * FROM InventorySlot " +
-			"WHERE characterID = ? AND slotNumber = ?;";
+		String selectSlot = """
+				SELECT * FROM InventorySlot
+					WHERE characterID = ? AND slotNumber = ?;
+				""";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectSlot)) {
 			selectStmt.setInt(1, character.getCharacterID());
 			selectStmt.setInt(2, slotNumber);
@@ -57,7 +59,7 @@ public class InventorySlotDao {
 	}
 
 	public static List<InventorySlot> getByCharacterID(Connection cxn,
-			GameCharacter character) throws SQLException {
+			Character character) throws SQLException {
 		String selectSlot = "SELECT * FROM InventorySlot WHERE characterID = ?;";
 		List<InventorySlot> slots = new ArrayList<>();
 		try (PreparedStatement stmt = cxn.prepareStatement(selectSlot)) {
@@ -75,50 +77,5 @@ public class InventorySlotDao {
 			}
 		}
 		return slots;
-	}
-
-	public static List<InventorySlot> getAllInventorySlots(Connection connection) throws SQLException {
-		List<InventorySlot> inventorySlots = new ArrayList<>();
-		String sql = "SELECT characterID, slotNumber, itemID, quantityStacked FROM InventorySlot";
-		
-		try (PreparedStatement ps = connection.prepareStatement(sql)) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					GameCharacter character = CharacterDao.getInstance().getCharacterById(connection, rs.getInt("characterID"));
-					Item item = ItemDao.getItemById(connection, rs.getInt("itemID"));
-					
-					InventorySlot inventorySlot = new InventorySlot(
-						character,
-						rs.getInt("slotNumber"),
-						item,
-						rs.getInt("quantityStacked")
-					);
-					inventorySlots.add(inventorySlot);
-				}
-			}
-		}
-		return inventorySlots;
-	}
-	
-	public static InventorySlot getInventorySlotById(Connection connection, int slotId) throws SQLException {
-		String sql = "SELECT characterID, slotNumber, itemID, quantityStacked FROM InventorySlot WHERE slotNumber = ? AND characterID = ?";
-		
-		try (PreparedStatement ps = connection.prepareStatement(sql)) {
-			ps.setInt(1, slotId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					GameCharacter character = CharacterDao.getInstance().getCharacterById(connection, rs.getInt("characterID"));
-					Item item = ItemDao.getItemById(connection, rs.getInt("itemID"));
-					
-					return new InventorySlot(
-						character,
-						rs.getInt("slotNumber"),
-						item,
-						rs.getInt("quantityStacked")
-					);
-				}
-			}
-		}
-		return null;
 	}
 }

@@ -1,15 +1,16 @@
+
 package cs5200project.model;
 
 import java.util.Objects;
 
 public class InventorySlot {
-	private GameCharacter character; // PK, FK
+	private Character character; // PK, FK
 	private int slotNumber; // PK
 	private Item item; // FK
 	private int quantityStacked;
 
 
-	public InventorySlot(GameCharacter character, int slotNumber, Item item,
+	public InventorySlot(Character character, int slotNumber, Item item,
 			int quantityStacked) {
 		this.character = character;
 		this.slotNumber = slotNumber;
@@ -17,11 +18,11 @@ public class InventorySlot {
 		this.quantityStacked = quantityStacked;
 	}
 
-	public GameCharacter getCharacter() {
+	public Character getCharacter() {
 		return character;
 	}
 
-	public void setCharacter(GameCharacter character) {
+	public void setCharacter(Character character) {
 		this.character = character;
 	}
 
@@ -49,14 +50,6 @@ public class InventorySlot {
 		this.quantityStacked = quantityStacked;
 	}
 
-	public int getCharacterID() {
-		return character.getCharacterID();
-	}
-
-	public int getItemId() {
-		return item.getItemId();
-	}
-
 	@Override
 	public int hashCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
@@ -80,7 +73,8 @@ public class InventorySlot {
 	@Override
 	public String toString() {
 		return String.format(
-				"InventorySlot[characterID=%d, slotNumber=%d, itemID=%d, quantityStacked=%d]",
-				getCharacterID(), slotNumber, getItemId(), quantityStacked);
+				"InventorySlot(characterID=%d, slotNumber=%d, itemID=%s, quantityStacked=%d)",
+				character.getCharacterID(), slotNumber, item.getItemId(),
+				quantityStacked);
 	}
 }

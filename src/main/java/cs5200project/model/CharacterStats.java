@@ -3,49 +3,44 @@ package cs5200project.model;
 import java.util.Objects;
 
 public class CharacterStats {
-    private GameCharacter character;
-    private Statistic statistic;
-    private int currentValue;
+    private int characterID;
+    private int statID;
+    private int charValue;
 
-    public CharacterStats(GameCharacter character, Statistic statistic, int currentValue) {
-        this.character = character;
-        this.statistic = statistic;
-        this.currentValue = currentValue;
+    public CharacterStats(int characterID, int statID, int charValue) {
+        this.characterID = characterID;
+        this.statID = statID;
+        this.charValue = charValue;
     }
 
-    public GameCharacter getCharacter() {
-        return character;
+    // Getters and Setters
+    public int getCharacterID() { 
+        return characterID; 
+    }
+    
+    public void setCharacterID(int characterID) { 
+        this.characterID = characterID; 
     }
 
-    public void setCharacter(GameCharacter character) {
-        this.character = character;
+    public int getStatID() { 
+        return statID; 
+    }
+    
+    public void setStatID(int statID) { 
+        this.statID = statID; 
     }
 
-    public Statistic getStatistic() {
-        return statistic;
+    public int getCharValue() { 
+        return charValue; 
     }
-
-    public void setStatistic(Statistic statistic) {
-        this.statistic = statistic;
+    
+    public void setCharValue(int charValue) { 
+        this.charValue = charValue; 
     }
-
-    public int getCurrentValue() {
-        return currentValue;
-    }
-
-    public void setCurrentValue(int currentValue) {
-        this.currentValue = currentValue;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("CharacterStats[character=%s, statistic=%s, currentValue=%d]",
-            character, statistic, currentValue);
-    }
-
+    
     @Override
     public int hashCode() {
-        return Objects.hash(character, statistic, currentValue);
+        return Objects.hash(characterID, statID, charValue);
     }
     
     @Override
@@ -58,8 +53,15 @@ public class CharacterStats {
             return false;
             
         CharacterStats other = (CharacterStats) obj;
-        return character.equals(other.character) 
-                && statistic.equals(other.statistic)
-                && currentValue == other.currentValue;
+        return characterID == other.characterID 
+                && statID == other.statID
+                && charValue == other.charValue;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format(
+                "CharacterStats(characterID=%d, statID=%d, charValue=%d)",
+                characterID, statID, charValue);
     }
 }

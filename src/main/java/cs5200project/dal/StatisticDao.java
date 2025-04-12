@@ -11,67 +11,16 @@ import java.util.List;
 import cs5200project.model.Statistic;
 
 public class StatisticDao {
-	private static StatisticDao instance = null;
 
-	protected StatisticDao() {
-	}
-
-	public static StatisticDao getInstance() {
-		if (instance == null) {
-			instance = new StatisticDao();
-		}
-		return instance;
-	}
-
-	public Statistic create(Connection conn, int statTypeId, int baseValue) throws SQLException {
-		String sql = "INSERT INTO Statistic(statTypeID, baseValue) VALUES(?, ?);";
-		try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-			ps.setInt(1, statTypeId);
-			ps.setInt(2, baseValue);
+	public static Statistic create(Connection cxn, int statTypeID, int statValue) throws SQLException {
+		String sql = "INSERT INTO `Statistic` (statTypeID, statValue) VALUES (?, ?)";
+		try (PreparedStatement ps = cxn.prepareStatement(sql,
+				Statement.RETURN_GENERATED_KEYS)) {
+			ps.setInt(1, statTypeID);
+			ps.setInt(2, statValue);
 			ps.executeUpdate();
-			
-			try (ResultSet keys = ps.getGeneratedKeys()) {
-				if (keys.next()) {
-					return new Statistic(keys.getInt(1), statTypeId, baseValue);
-				}
-				throw new SQLException("Failed to get generated key.");
-			}
+			return new Statistic(Utils.getAutoIncrementKey(ps), statValue, statTypeID);
 		}
-	}
-
-	public Statistic getById(Connection conn, int statId) throws SQLException {
-		String sql = "SELECT statID, statTypeID, baseValue FROM Statistic WHERE statID = ?;";
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, statId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return new Statistic(
-						rs.getInt("statID"),
-						rs.getInt("statTypeID"),
-						rs.getInt("baseValue")
-					);
-				}
-				return null;
-			}
-		}
-	}
-
-	public List<Statistic> getByStatTypeId(Connection conn, int statTypeId) throws SQLException {
-		String sql = "SELECT statID, statTypeID, baseValue FROM Statistic WHERE statTypeID = ?;";
-		List<Statistic> stats = new ArrayList<>();
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, statTypeId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					stats.add(new Statistic(
-						rs.getInt("statID"),
-						rs.getInt("statTypeID"),
-						rs.getInt("baseValue")
-					));
-				}
-			}
-		}
-		return stats;
 	}
 
 	/**

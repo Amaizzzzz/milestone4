@@ -4,139 +4,81 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 
-import cs5200project.model.GameCharacter;
+import cs5200project.model.Character;
+import cs5200project.model.Player;
+import cs5200project.model.Race;
+import cs5200project.model.Job;
 
 public class CharacterDao {
-    private static CharacterDao instance = null;
-
+    // Dao classes should not be instantiated.
+    // Pass Connection object as parameter in each method
+    // Each method should be static
     private CharacterDao() {
+        // Private constructor to prevent instantiation
     }
 
-    public static CharacterDao getInstance() {
-        if (instance == null) {
-            instance = new CharacterDao();
-        }
-        return instance;
-    }
-
-    public List<GameCharacter> getAllCharacters() throws SQLException {
-        String selectCharacters = 
-            "SELECT characterID, playerID, firstName, lastName, raceID, creationDate, isNewPlayer, currentJobID " +
-            "FROM `Character`;";
-        
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement selectStmt = connection.prepareStatement(selectCharacters);
-             ResultSet results = selectStmt.executeQuery()) {
-            
-            List<GameCharacter> characters = new ArrayList<>();
-            while (results.next()) {
-                GameCharacter character = new GameCharacter(
-                    results.getInt("characterID"),
-                    results.getInt("playerID"),
-                    results.getString("firstName"),
-                    results.getString("lastName"),
-                    results.getInt("raceID"),
-                    results.getDate("creationDate"),
-                    results.getBoolean("isNewPlayer"),
-                    results.getInt("currentJobID")
-                );
-                characters.add(character);
+    public static Character create(Connection cxn, Player player, String firstName, String lastName, Race race, Date creationTime, boolean isNewPlayer, Job job) throws SQLException {
+        String query = "INSERT INTO Character (playerID, firstName, lastName, raceID, creationTime, isNewPlayer, currentJobID) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (
+            PreparedStatement stmt = 
+                cxn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)
+            ) {
+            stmt.setInt(1, player.getPlayerID());
+            stmt.setString(2, firstName);
+            stmt.setString(3, lastName);
+            stmt.setInt(4, race.getRaceID());
+            stmt.setTimestamp(5, new java.sql.Timestamp(creationTime.getTime()));
+            stmt.setBoolean(6, isNewPlayer);
+            stmt.setInt(7, job.getJobID());
+            return new Character(Utils.getAutoIncrementKey(stmt), player.getPlayerID(), firstName, lastName, 
+                race.getRaceID(), creationTime, isNewPlayer, job.getJobID()); 
             }
-            return characters;
-        }
     }
-
-    public GameCharacter create(GameCharacter character) throws SQLException {
-        String insertCharacter = 
-            "INSERT INTO `Character` (playerID, firstName, lastName, raceID, creationDate, isNewPlayer, currentJobID) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?);";
-        
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement insertStmt = connection.prepareStatement(insertCharacter, Statement.RETURN_GENERATED_KEYS)) {
+    
+    public static Character create(Connection cxn, int playerID, String firstName, String lastName, int raceID, Date creationTime, boolean isNewPlayer, int currentJobID) throws SQLException {
+        String query = "INSERT INTO `Character` (playerID, firstName, lastName, raceID, creationTime, isNewPlayer, currentJobID) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (
+            PreparedStatement stmt = 
+                cxn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)
+            ) {
+            stmt.setInt(1, playerID);
+            stmt.setString(2, firstName);
+            stmt.setString(3, lastName);
+            stmt.setInt(4, raceID);
+            stmt.setTimestamp(5, new java.sql.Timestamp(creationTime.getTime()));
+            stmt.setBoolean(6, isNewPlayer);
+            stmt.setInt(7, currentJobID);
             
-            insertStmt.setInt(1, character.getPlayerID());
-            insertStmt.setString(2, character.getFirstName());
-            insertStmt.setString(3, character.getLastName());
-            insertStmt.setInt(4, character.getRaceID());
-            insertStmt.setDate(5, new java.sql.Date(character.getCreationDate().getTime()));
-            insertStmt.setBoolean(6, character.isNewPlayer());
-            insertStmt.setInt(7, character.getCurrentJobID());
+            // Execute the statement before trying to get the generated keys
+            stmt.executeUpdate();
             
-            insertStmt.executeUpdate();
-            
-            try (ResultSet resultKey = insertStmt.getGeneratedKeys()) {
-                if (resultKey.next()) {
-                    character.setCharacterID(resultKey.getInt(1));
-                }
+            int generatedKey = Utils.getAutoIncrementKey(stmt);
+            return new Character(generatedKey, playerID, firstName, lastName, 
+                raceID, creationTime, isNewPlayer, currentJobID); 
             }
-            
-            return character;
-        }
     }
 
-    public GameCharacter getCharacterById(Connection connection, int characterId) throws SQLException {
-        String selectCharacter = 
-            "SELECT characterID, playerID, firstName, lastName, raceID, creationDate, isNewPlayer, currentJobID " +
-            "FROM `Character` " +
-            "WHERE characterID = ?;";
-        
-        try (PreparedStatement selectStmt = connection.prepareStatement(selectCharacter)) {
-            selectStmt.setInt(1, characterId);
-            
-            try (ResultSet results = selectStmt.executeQuery()) {
-                if (results.next()) {
-                    return new GameCharacter(
-                        results.getInt("characterID"),
-                        results.getInt("playerID"),
-                        results.getString("firstName"),
-                        results.getString("lastName"),
-                        results.getInt("raceID"),
-                        results.getDate("creationDate"),
-                        results.getBoolean("isNewPlayer"),
-                        results.getInt("currentJobID")
+    public static Character getCharacterById(Connection cxn, int id) throws SQLException {
+        String query = "SELECT * FROM Character WHERE characterID = ?";
+        try (PreparedStatement stmt = cxn.prepareStatement(query)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Character(
+                        rs.getInt("characterID"),
+                        rs.getInt("playerID"),
+                        rs.getString("firstName"),
+                        rs.getString("lastName"),
+                        rs.getInt("raceID"),
+                        rs.getTimestamp("creationTime"),
+                        rs.getBoolean("isNewPlayer"),
+                        rs.getInt("currentJobID")
                     );
                 }
             }
         }
-        
         return null;
-    }
-
-    public List<GameCharacter> getCharactersByName(String partialName) throws SQLException {
-        String selectCharacters = 
-            "SELECT c.characterID, c.playerID, c.firstName, c.lastName, c.raceID, " +
-            "c.creationDate, c.isNewPlayer, c.currentJobID " +
-            "FROM `Character` c " +
-            "WHERE c.firstName LIKE ? OR c.lastName LIKE ?;";
-        
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement selectStmt = connection.prepareStatement(selectCharacters)) {
-            
-            String searchPattern = "%" + partialName + "%";
-            selectStmt.setString(1, searchPattern);
-            selectStmt.setString(2, searchPattern);
-            
-            try (ResultSet results = selectStmt.executeQuery()) {
-                List<GameCharacter> characters = new ArrayList<>();
-                while (results.next()) {
-                    GameCharacter character = new GameCharacter(
-                        results.getInt("characterID"),
-                        results.getInt("playerID"),
-                        results.getString("firstName"),
-                        results.getString("lastName"),
-                        results.getInt("raceID"),
-                        results.getDate("creationDate"),
-                        results.getBoolean("isNewPlayer"),
-                        results.getInt("currentJobID")
-                    );
-                    characters.add(character);
-                }
-                return characters;
-            }
-        }
     }
 }

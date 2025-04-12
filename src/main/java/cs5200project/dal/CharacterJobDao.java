@@ -1,70 +1,49 @@
 package cs5200project.dal;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import cs5200project.model.CharacterJob;
-import cs5200project.model.GameCharacter;
+import cs5200project.model.Character;
 import cs5200project.model.Job;
+import java.sql.*;
+import java.util.*;
 
 public class CharacterJobDao {
-    private static CharacterJobDao instance = null;
-    private JobDao jobDao;
-
-    protected CharacterJobDao() {
-        jobDao = JobDao.getInstance();
+    // Dao classes should not be instantiated.
+    // Pass Connection object as parameter in each method
+    // Each method should be static
+    private CharacterJobDao() {
+        // Private constructor to prevent instantiation
     }
 
-    public static CharacterJobDao getInstance() {
-        if (instance == null) {
-            instance = new CharacterJobDao();
+    public static CharacterJob create(Connection connection, Character character, Job job, boolean isUnlocked, int XP) throws SQLException {
+        String insertQuery = "INSERT INTO `CharacterJob` (characterID, jobID, isUnlocked, XP) VALUES (?, ?, ?, ?)";
+        
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+            statement.setInt(1, character.getCharacterID());
+            statement.setInt(2, job.getJobID());
+            statement.setBoolean(3, isUnlocked);
+            statement.setInt(4, XP);
+            statement.executeUpdate();
         }
-        return instance;
+        
+        return new CharacterJob(character.getCharacterID(), job.getJobID(), isUnlocked, XP);
     }
 
-    public List<CharacterJob> getByCharacterID(Connection conn, GameCharacter character) throws SQLException {
-        String sql = 
-            "SELECT cj.characterID, cj.jobID, cj.isUnlocked, cj.jobLevel, " +
-            "j.jobName " +
-            "FROM CharacterJob cj " +
-            "JOIN Job j ON cj.jobID = j.jobID " +
-            "WHERE cj.characterID = ?;";
-
+    public static List<CharacterJob> getJobsByCharacterId(Connection cxn, int characterID) throws SQLException {
         List<CharacterJob> jobs = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, character.getCharacterID());
-            try (ResultSet rs = ps.executeQuery()) {
+        String query = "SELECT * FROM Character_Job WHERE characterID = ?";
+        try (PreparedStatement stmt = cxn.prepareStatement(query)) {
+            stmt.setInt(1, characterID);
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Job job = new Job(
+                    jobs.add(new CharacterJob(
+                        rs.getInt("characterID"),
                         rs.getInt("jobID"),
-                        rs.getString("jobName")
-                    );
-                    CharacterJob characterJob = new CharacterJob(
-                        character,
-                        job,
                         rs.getBoolean("isUnlocked"),
-                        rs.getInt("jobLevel")
-                    );
-                    jobs.add(characterJob);
+                        rs.getInt("XP")
+                    ));
                 }
             }
         }
         return jobs;
-    }
-
-    public CharacterJob create(Connection conn, GameCharacter character, Job job, boolean isUnlocked, int jobLevel) throws SQLException {
-        String sql = "INSERT INTO CharacterJob(characterID, jobID, isUnlocked, jobLevel) VALUES(?, ?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, character.getCharacterID());
-            ps.setInt(2, job.getJobID());
-            ps.setBoolean(3, isUnlocked);
-            ps.setInt(4, jobLevel);
-            ps.executeUpdate();
-            return new CharacterJob(character, job, isUnlocked, jobLevel);
-        }
     }
 }
