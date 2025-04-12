@@ -1,7 +1,0 @@
-INDEX VERSION 1.4+/Users/gucenzhang/Desktop/cs5200project/.metadata/.plugins/org.eclipse.wst.jsdt.core/indexes
-934094024.index
-2260629785.index
-3133583974.index
-3753933643.index
-1487886891.index
-1443876959.index

@@ -1,4 +1,0 @@
-INDEX VERSION 1.134+/Users/gucenzhang/Desktop/cs5200project/.metadata/.plugins/org.eclipse.jdt.core
-1865797976.index
-980048134.index
-2260629785.index
