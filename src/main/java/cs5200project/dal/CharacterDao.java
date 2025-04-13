@@ -175,4 +175,27 @@ public class CharacterDao {
             return rowsAffected > 0;
         }
     }
+
+    public static List<GameCharacter> getCharactersByRace(Connection cxn, int raceId) throws SQLException {
+        List<GameCharacter> characters = new ArrayList<>();
+        String query = "SELECT * FROM `Character` WHERE raceID = ?";
+        try (PreparedStatement stmt = cxn.prepareStatement(query)) {
+            stmt.setInt(1, raceId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    characters.add(new GameCharacter(
+                        rs.getInt("characterID"),
+                        rs.getInt("playerID"),
+                        rs.getString("firstName"),
+                        rs.getString("lastName"),
+                        rs.getInt("raceID"),
+                        rs.getTimestamp("creationTime"),
+                        rs.getBoolean("isNewPlayer"),
+                        rs.getInt("currentJobID")
+                    ));
+                }
+            }
+        }
+        return characters;
+    }
 }

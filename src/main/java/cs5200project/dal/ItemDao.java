@@ -11,17 +11,23 @@ import java.util.List;
 import cs5200project.model.Item;
 
 public class ItemDao {
-	private ItemDao() {
+	private static ItemDao instance = null;
+	
+	private ItemDao() {}
+	
+	public static ItemDao getInstance() {
+		if (instance == null) {
+			instance = new ItemDao();
+		}
+		return instance;
 	}
 
-	public static int create(Connection cxn, String itemName, int itemLevel,
+	public int create(Connection connection, String itemName, int itemLevel,
 			int maxStackSize, double price, int quantity) throws SQLException {
-		final String insertItem = """
-				    INSERT INTO Item (itemName, itemLevel, maxStackSize, price, quantity)
-				    VALUES (?, ?, ?, ?, ?);
-				""";
+		String insertItem = "INSERT INTO Item (itemName, itemLevel, maxStackSize, price, quantity) " +
+						  "VALUES (?, ?, ?, ?, ?)";
 
-		try (PreparedStatement insertStmt = cxn.prepareStatement(insertItem,
+		try (PreparedStatement insertStmt = connection.prepareStatement(insertItem,
 				Statement.RETURN_GENERATED_KEYS)) {
 			insertStmt.setString(1, itemName);
 			insertStmt.setInt(2, itemLevel);
@@ -34,10 +40,10 @@ public class ItemDao {
 		}
 	}
 
-	public static Item getItemById(Connection cxn, int itemId)
+	public Item getItemById(Connection connection, int itemId)
 			throws SQLException {
-		final String selectItem = "SELECT * FROM Item WHERE itemID = ?;";
-		try (PreparedStatement selectStmt = cxn.prepareStatement(selectItem)) {
+		String selectItem = "SELECT * FROM Item WHERE itemID = ?";
+		try (PreparedStatement selectStmt = connection.prepareStatement(selectItem)) {
 			selectStmt.setInt(1, itemId);
 			try (ResultSet results = selectStmt.executeQuery()) {
 				if (results.next()) {
@@ -53,11 +59,12 @@ public class ItemDao {
 		}
 	}
 
-	public static List<Item> getItemsByName(Connection cxn, String itemName)
+	public List<Item> getItemsByName(Connection connection, String itemName)
 			throws SQLException {
-		final String selectItem = "SELECT * FROM Item WHERE itemName = ?;";
+		String selectItem = "SELECT * FROM Item WHERE itemName = ?";
 		List<Item> itemsList = new ArrayList<>();
-		try (PreparedStatement selectStmt = cxn.prepareStatement(selectItem)) {
+		try (PreparedStatement selectStmt = connection.prepareStatement(selectItem)) {
+			selectStmt.setString(1, itemName);
 			try (ResultSet results = selectStmt.executeQuery()) {
 				while (results.next()) {
 					itemsList.add(new Item(results.getInt("itemID"), itemName,
@@ -71,10 +78,10 @@ public class ItemDao {
 		}
 	}
 
-	public static <T extends Item> T updateQuantity(Connection cxn, T item,
+	public <T extends Item> T updateQuantity(Connection connection, T item,
 			int newQuantity) throws SQLException {
-		final String update = "UPDATE Item SET quantity = ? WHERE itemID = ?;";
-		try (PreparedStatement updateStmt = cxn.prepareStatement(update)) {
+		String update = "UPDATE Item SET quantity = ? WHERE itemID = ?";
+		try (PreparedStatement updateStmt = connection.prepareStatement(update)) {
 			updateStmt.setInt(1, newQuantity);
 			updateStmt.setInt(2, item.getItemId());
 			updateStmt.executeUpdate();
@@ -84,9 +91,9 @@ public class ItemDao {
 		}
 	}
 
-	public static void delete(Connection cxn, Item item) throws SQLException {
-		final String delete = "DELETE FROM Item WHERE itemID = ?;";
-		try (PreparedStatement stmt = cxn.prepareStatement(delete)) {
+	public void delete(Connection connection, Item item) throws SQLException {
+		String delete = "DELETE FROM Item WHERE itemID = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(delete)) {
 			stmt.setInt(1, item.getItemId());
 			stmt.executeUpdate();
 		}

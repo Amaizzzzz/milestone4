@@ -2,6 +2,7 @@
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/GearJob.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Currency.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/GearSlotServlet.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/Character_StatsDao.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Job.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Weapon.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/CharacterJob.java
@@ -14,8 +15,11 @@
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/GearInstance.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/CharacterCurrencyDao.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/WeaponServlet.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/CharacterJobServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Statistic.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/CharacterCurrencyServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/RaceDetailServlet.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Character_Job.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/CharacterServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/InventorySlotDetailServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Consumable.java
@@ -25,6 +29,7 @@
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/JobServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/ConsumableServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/GameCharacter.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/Character_JobDao.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/GearInstanceDetailServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/GearSlot.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/WeaponDao.java
@@ -63,7 +68,9 @@
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/LevelThreshold.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/StatType.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/StatisticDao.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/Character_Stats.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/model/InventorySlot.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/CharacterStatsDao.java
+/Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/CharacterStatsServlet.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/dal/LevelThresholdDao.java
 /Users/gucenzhang/Desktop/cs5200project/src/main/java/cs5200project/servlet/JobDetailServlet.java
