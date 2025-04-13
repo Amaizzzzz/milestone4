@@ -53,7 +53,7 @@ public class LevelThreshold {
     // toString method
     @Override
     public String toString() {
-        return String.format("LevelThreshold(level=%d, requiredXP=%d)", charLevel, requiredXP);
+        return "LevelThreshold [charLevel=" + charLevel + ", requiredXP=" + requiredXP + "]";
     }
 
 }

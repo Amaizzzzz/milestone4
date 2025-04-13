@@ -1,57 +1,66 @@
 package cs5200project.dal;
 
 import cs5200project.model.CharacterCurrency;
-import cs5200project.model.Character;
-import cs5200project.model.Currency;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CharacterCurrencyDao {
-    // Dao classes should not be instantiated.
-    // Pass Connection object as parameter in each method
-    // Each method should be static
-    private CharacterCurrencyDao() {
-        // Private constructor to prevent instantiation
-    }
-
-    // Keep the original method as a convenience
-    public static CharacterCurrency create(Connection cxn, Character character, Currency currency, int currentAmount, boolean isCurrent) throws SQLException {
-        return create(cxn, character.getCharacterID(), currency.getCurrencyID(), currentAmount, isCurrent);
+    private static CharacterCurrencyDao instance = null;
+    
+    private CharacterCurrencyDao() {}
+    
+    public static CharacterCurrencyDao getInstance() {
+        if (instance == null) {
+            instance = new CharacterCurrencyDao();
+        }
+        return instance;
     }
     
-    // Add an overloaded method that takes IDs directly
-    public static CharacterCurrency create(Connection cxn, int characterID, int currencyID, int currentAmount, boolean isCurrent) throws SQLException {
-        final String insertCharacterCurrency = """
-            INSERT INTO `CharacterCurrency`(characterID, currencyID, currentAmount, isCurrent)
-            VALUES (?, ?, ?, ?)
-            """;
-
-        try (PreparedStatement insertStmt = cxn.prepareStatement(insertCharacterCurrency)) {
-            insertStmt.setInt(1, characterID);
-            insertStmt.setInt(2, currencyID);
-            insertStmt.setInt(3, currentAmount);
-            insertStmt.setBoolean(4, isCurrent);
-            insertStmt.executeUpdate();
-            return new CharacterCurrency(characterID, currencyID, currentAmount, isCurrent);
+    public CharacterCurrency create(Connection connection, int currencyId, int characterId, int amount) throws SQLException {
+        String sql = "INSERT INTO CharacterCurrency(currencyId, characterId, amount) VALUES (?, ?, ?)";
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, currencyId);
+            statement.setInt(2, characterId);
+            statement.setInt(3, amount);
+            statement.executeUpdate();
+            
+            return new CharacterCurrency(currencyId, characterId, amount);
         }
     }
-
-    public static List<CharacterCurrency> getCurrenciesByCharacterId(Connection cxn, int characterID) throws SQLException {
+    
+    public List<CharacterCurrency> getCharacterCurrencies(Connection connection, int characterId) throws SQLException {
         List<CharacterCurrency> currencies = new ArrayList<>();
-        String query = "SELECT * FROM `CharacterCurrency` WHERE characterID = ?";
-        try (PreparedStatement stmt = cxn.prepareStatement(query)) {
-            stmt.setInt(1, characterID);
-            try (ResultSet rs = stmt.executeQuery()) {
+        String sql = "SELECT * FROM CharacterCurrency WHERE characterId = ?";
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, characterId);
+            try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    currencies.add(new CharacterCurrency(
-                        rs.getInt("characterID"),
-                        rs.getInt("currencyID"),
-                        rs.getInt("currentAmount"),
-                        rs.getBoolean("isCurrent")
-                    ));
+                    CharacterCurrency currency = new CharacterCurrency(
+                        rs.getInt("currencyId"),
+                        rs.getInt("characterId"),
+                        rs.getInt("amount")
+                    );
+                    currencies.add(currency);
                 }
             }
         }
         return currencies;
+    }
+    
+    public void updateCurrencyAmount(Connection connection, int currencyId, int characterId, int newAmount) throws SQLException {
+        String sql = "UPDATE CharacterCurrency SET amount = ? WHERE currencyId = ? AND characterId = ?";
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, newAmount);
+            statement.setInt(2, currencyId);
+            statement.setInt(3, characterId);
+            statement.executeUpdate();
+        }
     }
 }
