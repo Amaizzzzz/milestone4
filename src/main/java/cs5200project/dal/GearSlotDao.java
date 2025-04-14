@@ -65,19 +65,5 @@ public class GearSlotDao {
 			deleteStmt.executeUpdate();
 		}
 	}
-
-	public static List<GearSlot> getAllGearSlots(Connection cxn) throws SQLException {
-		final String selectAllGearSlots = "SELECT * FROM GearSlot;";
-		List<GearSlot> gearSlots = new ArrayList<>();
-		try (PreparedStatement stmt = cxn.prepareStatement(selectAllGearSlots);
-				ResultSet results = stmt.executeQuery()) {
-			while (results.next()) {
-				gearSlots.add(new GearSlot(
-					results.getInt("slotID"),
-					results.getString("slotName")));
-			}
-			return gearSlots;
-		}
-	}
 }
 

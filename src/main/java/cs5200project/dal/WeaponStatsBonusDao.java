@@ -7,14 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import cs5200project.model.WeaponStatsBonus;
-import cs5200project.model.Weapon;
-import cs5200project.model.Weapon.RankValue;
-import cs5200project.model.Weapon.WeaponDurability;
-import cs5200project.model.GearSlot;
-import cs5200project.model.Item;
-import cs5200project.model.Job;
 import cs5200project.model.Statistic;
+import cs5200project.model.Weapon;
+import cs5200project.model.WeaponStatsBonus;
 
 public class WeaponStatsBonusDao {
   private WeaponStatsBonusDao() {

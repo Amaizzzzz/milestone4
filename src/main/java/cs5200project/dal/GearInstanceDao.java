@@ -12,7 +12,7 @@ import cs5200project.model.Character;
 import cs5200project.model.Gear;
 import cs5200project.model.GearInstance;
 import cs5200project.model.GearSlot;
-import cs5200project.model.Item;
+
 
 public class GearInstanceDao {
 	private GearInstanceDao() {
@@ -20,8 +20,9 @@ public class GearInstanceDao {
 
 	public static GearInstance create(Connection cxn, Gear gear,
 			Character character, GearSlot gearSlot) throws SQLException {
-		String insertGearInstance = "INSERT INTO `GearInstance` (itemID, characterID, gearSlotID) " +
-			"VALUES (?, ?, ?)";
+		String insertGearInstance = """
+				INSERT INTO `GearInstance` (itemID, characterID, gearSlotID)
+					VALUES (?, ?, ?)""";
 		try (PreparedStatement stmt = cxn.prepareStatement(insertGearInstance,
 				Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setInt(1, gear.getItemId());
@@ -82,29 +83,6 @@ public class GearInstanceDao {
 					gearInstances.add(
 							new GearInstance(results.getInt("gearInstanceID"),
 									gearSlot, character, gear));
-				}
-			}
-		}
-		return gearInstances;
-	}
-
-	public static List<GearInstance> getGearByCharacterId(Connection cxn, int characterId) throws SQLException {
-		String selectGearInstance = "SELECT * FROM `GearInstance` WHERE characterID = ?";
-		List<GearInstance> gearInstances = new ArrayList<>();
-		try (PreparedStatement stmt = cxn.prepareStatement(selectGearInstance)) {
-			stmt.setInt(1, characterId);
-			try (ResultSet results = stmt.executeQuery()) {
-				while (results.next()) {
-					int gearSlotID = results.getInt("gearSlotID");
-					int itemID = results.getInt("itemID");
-
-					Character character = CharacterDao.getCharacterById(cxn, characterId);
-					GearSlot gearSlot = GearSlotDao.getGearSlotById(cxn, gearSlotID);
-					Gear gear = GearDao.getGearByItemID(cxn, itemID);
-
-					gearInstances.add(
-						new GearInstance(results.getInt("gearInstanceID"),
-							gearSlot, character, gear));
 				}
 			}
 		}

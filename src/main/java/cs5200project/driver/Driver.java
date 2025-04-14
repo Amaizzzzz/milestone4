@@ -2,6 +2,9 @@ package cs5200project.driver;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import cs5200project.dal.CharacterCurrencyDao;
 import cs5200project.dal.CharacterDao;
@@ -38,7 +41,6 @@ import cs5200project.model.Statistic;
 import cs5200project.model.Weapon;
 import cs5200project.model.Weapon.RankValue;
 import cs5200project.model.Weapon.WeaponDurability;
-import cs5200project.model.WeaponStatsBonus;
 
 public class Driver {
     public static void main(String[] args) {
@@ -62,33 +64,60 @@ public class Driver {
             Player player = PlayerDao.create(cxn, "John Doe", "john@example.com", "NA");
             System.out.println("Created player: " + player.getUsername());
 
-            // 2. Create Race
-            Race race = RaceDao.create(cxn, "Human");
-            System.out.println("Created race: " + race.getRaceName());
+			// 2. Create 6 Races
+			String[] raceNames = { "Human", "Elf", "Orc", "Dwarf", "Gnome",
+					"Dragonkin" };
+			Race[] races = new Race[raceNames.length];
 
-            // 3. Create Job
-            Job warriorJob = JobDao.create(cxn, "Warrior");
-            Job mageJob = JobDao.create(cxn, "Mage");
-            Job rangerJob = JobDao.create(cxn, "Ranger");
-            System.out.println("Created jobs: Warrior, Mage, Ranger");
+			for (int i = 0; i < raceNames.length; i++) {
+				races[i] = RaceDao.create(cxn, raceNames[i]);
+				System.out.println("Created race: " + races[i].getRaceName());
+			}
+
+			// 3. Create 5 Jobs
+			String[] jobNames = { "Warrior", "Mage", "Ranger", "Paladin",
+					"Thief" };
+			Job[] jobs = new Job[jobNames.length];
+
+			for (int i = 0; i < jobNames.length; i++) {
+				jobs[i] = JobDao.create(cxn, jobNames[i]);
+				System.out.println("Created job: " + jobs[i].getJobName());
+			}
 
             // 4. Create GearSlot
             GearSlot headSlot = GearSlotDao.create(cxn, "Head");
             GearSlot chestSlot = GearSlotDao.create(cxn, "Chest");
             GearSlot mainHandSlot = GearSlotDao.create(cxn, "MainHand");
+			GearSlot[] gearSlots = { headSlot, chestSlot, mainHandSlot };
             System.out.println("Created gear slots: Head, Chest, MainHand");
 
-            // 5. Create Character
-            int playerID = player.getPlayerID();
-            int raceID = race.getRaceID();
-            int currentJobID = warriorJob.getJobID(); 
-            boolean isNewPlayer = true;
-            String firstName = "Alice";
-            String lastName = "Smith";
-            
-            cs5200project.model.Character character = CharacterDao.create(cxn, playerID, firstName, lastName, raceID, 
-                new java.util.Date(), isNewPlayer, currentJobID);
-            System.out.println("Created character: " + firstName + " " + lastName);
+			// 4. Create 10 Characters
+			String[] firstNames = { "Hannah", "Alice", "Julia", "Charlie",
+					"Diana", "Ethan", "Fiona", "George", "Ivan", "Bob" };
+			String[] lastNames = { "Young", "Smith", "Lee", "Brown", "Johnson",
+					"Davis", "Wilson", "Clark", "Lopez", "Lee", };
+
+			List<cs5200project.model.Character> characters = new ArrayList<>();
+			Date baseTime = new Date();
+			for (int i = 0; i < 10; i++) {
+				String firstName = firstNames[i];
+				String lastName = lastNames[i];
+				boolean isNewPlayer = (i % 2 == 0); // alternate
+
+				Race race = races[i % races.length]; // cycle through races
+				Job job = jobs[i % jobs.length]; // cycle through jobs
+				Date creationTime = new Date(baseTime.getTime() + (i * 1000L));
+
+				cs5200project.model.Character character = CharacterDao.create(
+						cxn, player, firstName, lastName, race,
+						creationTime, isNewPlayer, job);
+				characters.add(character); // store for stats creation
+
+				System.out.println("Created character: " + firstName + " "
+						+ lastName + " (Race: "
+						+ races[i % races.length].getRaceName() + ", Job: "
+						+ jobs[i % jobs.length].getJobName() + ")");
+			}
 
             // 6. Create Statistic Types
             StatType hpStatType = StatTypeDao.create(cxn, "HP", "Hit Points");
@@ -102,36 +131,55 @@ public class Driver {
             Statistic strStat = StatisticDao.create(cxn, strengthStatType.getStatTypeID(), 10);
             System.out.println("Created statistics for HP, MP, and STR");
 
-            // 8. Create Character Stats
-            CharacterStatsDao.create(cxn, character, hpStat, 150);
-            CharacterStatsDao.create(cxn, character, mpStat, 80);
-            CharacterStatsDao.create(cxn, character, strStat, 15);
-            System.out.println("Created character stats for character: " + character.getCharacterID());
+			// 8. Create Character Stats
+			for (cs5200project.model.Character c : characters) {
+				CharacterStatsDao.create(cxn, c, hpStat,
+						150 + (c.getCharacterID() % 3) * 10); // Slightly vary
+																// values
+				CharacterStatsDao.create(cxn, c, mpStat,
+						80 + (c.getCharacterID() % 2) * 5);
+				CharacterStatsDao.create(cxn, c, strStat,
+						15 + (c.getCharacterID() % 4));
+				System.out.println("Created character stats for character: "
+						+ c.getCharacterID());
+			}
 
             // 9. Create Character Job
-            CharacterJobDao.create(cxn, character, warriorJob, true, 50);
-            CharacterJobDao.create(cxn, character, mageJob, true, 20);
-            System.out.println("Created character job mappings for character: " + character.getCharacterID());
+			for (int i = 0; i < characters.size(); i++) {
+				cs5200project.model.Character c = characters.get(i);
+				Job currentJob = jobs[i % jobs.length];
+				CharacterJobDao.create(cxn, c, currentJob, true, 50 + (i * 10));
+				System.out.println(
+						"Created character job mappings for character: "
+								+ c.getCharacterID() + " → "
+								+ currentJob.getJobName() + " (primary), ");
+			}
 
-            // 10. Create Weapon
+			// 10. Create 5 Weapons
             // Note: We don't need to create Item separately as WeaponDao.create does that for us
-            Weapon ironSword = WeaponDao.create(cxn, 
-                0,  // itemID=0 means create a new Item
-                "Iron Sword", 
-                10, // itemLevel
-                1,  // maxStackSize
-                100.0, // price
-                1,  // quantity
-                5,  // requiredLevel
-                15, // damage
-                2,  // attackSpeed
-                "Sword", // weaponType
-                mainHandSlot, // gearSlot
-                warriorJob, // requiredJob
-                WeaponDurability.NEW, // durability
-                RankValue.GREEN // rankValue
-            );
-            System.out.println("Created weapon: " + ironSword.getItemName() + " with ID: " + ironSword.getItemId());
+			String[] weaponNames = { "Iron Sword", "Magic Staff", "Longbow",
+					"Holy Blade", "Dagger" };
+			String[] weaponTypes = { "Sword", "Staff", "Bow", "Sword",
+					"Knife" };
+			int[] damages = { 15, 10, 12, 18, 9 };
+			int[] speeds = { 2, 3, 2, 1, 4 };
+			Weapon[] weapons = new Weapon[weaponNames.length];
+
+			for (int i = 0; i < weaponNames.length; i++) {
+				Job job = jobs[i % jobs.length]; // Assign each weapon to a job
+				weapons[i] = WeaponDao.create(cxn, 0, // create new item
+						weaponNames[i], 10 + i, // itemLevel
+						1, // maxStackSize
+						100 + i * 20.0, // price
+						1, // quantity
+						5 + i, // requiredLevel
+						damages[i], speeds[i], weaponTypes[i], mainHandSlot,
+						job, WeaponDurability.NEW,
+						RankValue.values()[i % RankValue.values().length]
+				);
+				System.out.println("Created weapon: " + weapons[i].getItemName()
+						+ " for job: " + job.getJobName());
+			}
 
             // 11. Create Consumable
             // Note: We don't need to create Item separately as ConsumableDao.create does that for us
@@ -148,38 +196,55 @@ public class Driver {
             );
             System.out.println("Created consumable: " + healthPotion.getItemName() + " with ID: " + healthPotion.getItemId());
 
-            // 12. Create Gear
+			// 12. Create 3 Gears
             // Note: We don't need to create Item separately as GearDao.create does that for us
-            Gear ironHelmet = GearDao.create(cxn,
-                0,  // itemID=0 means create a new Item
-                "Iron Helmet",
-                10, // itemLevel
-                1,  // maxStackSize
-                75.0, // price
-                1,  // quantity
-                5   // requiredLevel
-            );
-            System.out.println("Created gear: " + ironHelmet.getItemName() + " with ID: " + ironHelmet.getItemId());
+			String[] gearNames = { "Iron Helmet", "Chainmail Chest",
+					"Steel Boots" };
+			int[] gearLevels = { 10, 12, 14 };
+			double[] gearPrices = { 75.0, 120.0, 95.0 };
+			Gear[] gears = new Gear[gearNames.length];
+			for (int i = 0; i < gearNames.length; i++) {
+				gears[i] = GearDao.create(cxn, 0, // new item
+						gearNames[i], gearLevels[i], 1, // maxStackSize
+						gearPrices[i], // price
+						1, // quantity
+						5 + i // requiredLevel
+				);
+				System.out.println("Created gear: " + gears[i].getItemName()
+						+ " with ID: " + gears[i].getItemId());
+			}
 
-            // 13. Create GearInstance
-            GearInstance helmetInstance = GearInstanceDao.create(cxn, 
-                ironHelmet,
-                character,
-                headSlot // Using the headSlot we created earlier
-            );
-            System.out.println("Created gear instance for gear ID: " + helmetInstance.getGearId());
+			// 13. Create GearInstances for characters (1 gear per character)
+			for (int i = 0; i < characters.size(); i++) {
+				cs5200project.model.Character c = characters.get(i);
+				Gear gear = gears[i % gears.length]; // cycle through gears
+				GearSlot slot = gearSlots[i % gearSlots.length];
 
-            // 14. Create GearJob (associate gear with job)
-            GearJobDao.create(cxn, ironHelmet.getItemId(), warriorJob.getJobID());
-            System.out.println("Created gear job mapping for gear ID: " + ironHelmet.getItemId());
+				GearInstance instance = GearInstanceDao.create(cxn, gear, c,
+						slot);
+				System.out.println(
+						"Created gear instance of " + gear.getItemName()
+								+ " for character " + c.getCharacterID());
+			}
 
-            // 15. Create WeaponStatsBonus
-            WeaponStatsBonus swordStrBonus = WeaponStatsBonusDao.create(cxn, 
-                ironSword, 
-                strStat, 
-                5 // bonus value
-            );
-            System.out.println("Created weapon stat bonus for weapon: " + ironSword.getItemName());
+			// 14. Create GearJob (associate each gear with one job)
+			for (int i = 0; i < gears.length; i++) {
+				int jobID = jobs[i % jobs.length].getJobID();
+				Gear gear = gears[i];
+
+				GearJobDao.create(cxn, gear.getItemId(), jobID);
+				System.out.println("Created gear job mapping for gear: "
+						+ gear.getItemName() + " → "
+						+ jobs[i % jobs.length].getJobName());
+			}
+
+			// 15. Create WeaponStatsBonus for each weapon (STR + i)
+			for (int i = 0; i < weapons.length; i++) {
+				Weapon weapon = weapons[i];
+				WeaponStatsBonusDao.create(cxn, weapon, strStat, 5 + i);
+				System.out.println("Created weapon stat bonus for weapon: "
+						+ weapon.getItemName() + " (+STR " + (5 + i) + ")");
+			}
 
             // 16. Create ConsumablesStatsBonus
             ConsumablesStatsBonus potionHpBonus = ConsumablesStatsBonusDao.create(cxn, 
@@ -194,14 +259,19 @@ public class Driver {
             Currency gold = CurrencyDao.create(cxn, "Gold", 999999, 100000);
             System.out.println("Created currency: " + gold.getCurrencyName());
 
-            // 18. Create CharacterCurrency
-            CharacterCurrency charGold = CharacterCurrencyDao.create(cxn, 
-                character.getCharacterID(), 
-                gold.getCurrencyID(), 
-                1000, // current amount
-                true  // is current
-            );
-            System.out.println("Created character currency for character: " + character.getCharacterID());
+			// 18. Create CharacterCurrency for all characters
+			for (int i = 0; i < characters.size(); i++) {
+				cs5200project.model.Character c = characters.get(i);
+
+				int amount = 1000 + (i * 50); // Vary amount: 1000, 1050, 1100,
+												// ...
+
+				CharacterCurrency charGold = CharacterCurrencyDao.create(cxn,
+						c.getCharacterID(), gold.getCurrencyID(), amount, true // isCurrent
+				);
+				System.out.println("Created character currency for character "
+						+ c.getCharacterID() + " with amount: " + amount);
+			}
 
             System.out.println("All test data created successfully!");
         }

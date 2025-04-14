@@ -3,43 +3,54 @@ package cs5200project.model;
 import java.util.Objects;
 
 public class CharacterCurrency {
-    private int currencyId;
-    private int characterId;
-    private int amount;
-    
-    public CharacterCurrency(int currencyId, int characterId, int amount) {
-        this.currencyId = currencyId;
-        this.characterId = characterId;
-        this.amount = amount;
+    private int characterID;
+    private int currencyID;
+    private int currentAmount;
+    private boolean isCurrent;
+
+    public CharacterCurrency(int characterID, int currencyID, int currentAmount, boolean isCurrent) {
+        this.characterID = characterID;
+        this.currencyID = currencyID;
+        this.currentAmount = currentAmount;
+        this.isCurrent = isCurrent;
+    }
+
+    // Getters and Setters
+    public int getCharacterID() { 
+        return characterID; 
     }
     
-    public int getCurrencyId() {
-        return currencyId;
+    public void setCharacterID(int characterID) { 
+        this.characterID = characterID; 
+    }
+
+    public int getCurrencyID() { 
+        return currencyID; 
     }
     
-    public void setCurrencyId(int currencyId) {
-        this.currencyId = currencyId;
+    public void setCurrencyID(int currencyID) { 
+        this.currencyID = currencyID; 
+    }
+
+    public int getCurrentAmount() { 
+        return currentAmount; 
     }
     
-    public int getCharacterId() {
-        return characterId;
+    public void setCurrentAmount(int currentAmount) { 
+        this.currentAmount = currentAmount; 
+    }
+
+    public boolean isCurrent() { 
+        return isCurrent; 
     }
     
-    public void setCharacterId(int characterId) {
-        this.characterId = characterId;
-    }
-    
-    public int getAmount() {
-        return amount;
-    }
-    
-    public void setAmount(int amount) {
-        this.amount = amount;
+    public void setCurrent(boolean current) { 
+        isCurrent = current; 
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(currencyId, characterId, amount);
+        return Objects.hash(characterID, currencyID, currentAmount, isCurrent);
     }
     
     @Override
@@ -52,15 +63,16 @@ public class CharacterCurrency {
             return false;
             
         CharacterCurrency other = (CharacterCurrency) obj;
-        return currencyId == other.currencyId 
-                && characterId == other.characterId
-                && amount == other.amount;
+        return characterID == other.characterID 
+                && currencyID == other.currencyID
+                && currentAmount == other.currentAmount
+                && isCurrent == other.isCurrent;
     }
     
     @Override
     public String toString() {
         return String.format(
-                "CharacterCurrency(currencyId=%d, characterId=%d, amount=%d)",
-                currencyId, characterId, amount);
+                "CharacterCurrency(characterID=%d, currencyID=%d, currentAmount=%d, isCurrent=%s)",
+                characterID, currencyID, currentAmount, isCurrent);
     }
 }

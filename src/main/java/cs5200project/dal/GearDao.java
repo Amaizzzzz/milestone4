@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cs5200project.model.Gear;
-import cs5200project.model.Item;
 
 public class GearDao { 
 	// Dao classes should not be instantiated.
