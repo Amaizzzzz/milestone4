@@ -58,7 +58,6 @@
           <th>Statistics</th>
           <th>Is New Player</th>
           <th>Update</th>
-          <th>Delete</th>
         </tr>
         <c:forEach items="${characterList}" var="character">
           <tr>
@@ -66,11 +65,10 @@
             <td>${character.race.raceName}</td>
             <td>${character.currentJob.jobName}</td>
             <td><fmt:formatDate value="${character.creationTime}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
-            <td><a href="characterjobs?characterId=${character.characterID}">Jobs</a></td>
+            <td><a href="characterjoblist?jobId=${character.currentJob.jobID}">View Jobs</a></td>
             <td><a href="characterstats?characterId=${character.characterID}">Statistics</a></td>
             <td><c:out value="${character.newPlayer}" /></td>
             <td><a href="characterupdate?characterId=${character.characterID}">Update Name</a></td>
-            <td><a href="characterdelete?characterId=${character.characterID}">Delete</a></td>
           </tr>
         </c:forEach>
       </table>
