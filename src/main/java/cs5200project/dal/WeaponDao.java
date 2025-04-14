@@ -142,4 +142,49 @@ public class WeaponDao {
 		}
 		return weapons;
 	}
+
+	public void update(Connection connection, int itemId, String itemName, int itemLevel, int maxStackSize,
+					  double price, int quantity, int requiredLevel, int damage, int attackSpeed,
+					  String weaponType, WeaponDurability weaponDurability, RankValue rankValue) throws SQLException {
+		// Update Item table
+		String updateItem = "UPDATE Item SET itemName = ?, itemLevel = ?, maxStackSize = ?, price = ?, quantity = ? WHERE itemID = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(updateItem)) {
+			stmt.setString(1, itemName);
+			stmt.setInt(2, itemLevel);
+			stmt.setInt(3, maxStackSize);
+			stmt.setDouble(4, price);
+			stmt.setInt(5, quantity);
+			stmt.setInt(6, itemId);
+			stmt.executeUpdate();
+		}
+
+		// Update Weapon table
+		String updateWeapon = "UPDATE Weapon SET requiredLevel = ?, damage = ?, attackSpeed = ?, weaponType = ?, weaponDurability = ?, rankValue = ? WHERE itemID = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(updateWeapon)) {
+			stmt.setInt(1, requiredLevel);
+			stmt.setInt(2, damage);
+			stmt.setInt(3, attackSpeed);
+			stmt.setString(4, weaponType);
+			stmt.setString(5, weaponDurability.name());
+			stmt.setString(6, rankValue.name());
+			stmt.setInt(7, itemId);
+			stmt.executeUpdate();
+		}
+	}
+
+	public void delete(Connection connection, int itemId) throws SQLException {
+		// First delete from Weapon table (child)
+		String deleteWeapon = "DELETE FROM Weapon WHERE itemID = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(deleteWeapon)) {
+			stmt.setInt(1, itemId);
+			stmt.executeUpdate();
+		}
+
+		// Then delete from Item table (parent)
+		String deleteItem = "DELETE FROM Item WHERE itemID = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(deleteItem)) {
+			stmt.setInt(1, itemId);
+			stmt.executeUpdate();
+		}
+	}
 }

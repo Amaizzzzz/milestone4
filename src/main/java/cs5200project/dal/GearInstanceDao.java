@@ -8,21 +8,29 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import cs5200project.model.Character;
+import cs5200project.model.GameCharacter;
 import cs5200project.model.Gear;
 import cs5200project.model.GearInstance;
 import cs5200project.model.GearSlot;
 import cs5200project.model.Item;
 
 public class GearInstanceDao {
-	private GearInstanceDao() {
+	private static GearInstanceDao instance = null;
+	
+	protected GearInstanceDao() {}
+	
+	public static GearInstanceDao getInstance() {
+		if(instance == null) {
+			instance = new GearInstanceDao();
+		}
+		return instance;
 	}
 
-	public static GearInstance create(Connection cxn, Gear gear,
-			Character character, GearSlot gearSlot) throws SQLException {
+	public GearInstance create(Connection connection, Gear gear,
+			GameCharacter character, GearSlot gearSlot) throws SQLException {
 		String insertGearInstance = "INSERT INTO `GearInstance` (itemID, characterID, gearSlotID) " +
 			"VALUES (?, ?, ?)";
-		try (PreparedStatement stmt = cxn.prepareStatement(insertGearInstance,
+		try (PreparedStatement stmt = connection.prepareStatement(insertGearInstance,
 				Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setInt(1, gear.getItemId());
 			stmt.setInt(2, character.getCharacterID());
@@ -33,50 +41,39 @@ public class GearInstanceDao {
 		}
 	}
 
-	public static GearInstance getGearInstanceByGearInstanceId(
-			Connection cxn,
-			GearInstance gearInstance
-	) throws SQLException {
+	public GearInstance getGearInstanceById(Connection connection, int gearInstanceId) throws SQLException {
 		String selectInstance = "SELECT * FROM `GearInstance` WHERE gearInstanceID = ?";
-		try (PreparedStatement selectStmt = cxn
-				.prepareStatement(selectInstance)) {
-			selectStmt.setInt(1, gearInstance.getGearInstanceID());
+		try (PreparedStatement selectStmt = connection.prepareStatement(selectInstance)) {
+			selectStmt.setInt(1, gearInstanceId);
 			try (ResultSet results = selectStmt.executeQuery()) {
 				if (results.next()) {
-
-					GearSlot slot = GearSlotDao.getGearSlotById(cxn,
+					GearSlot slot = GearSlotDao.getInstance().getGearSlotById(connection,
 							results.getInt("gearSlotID"));
-					Character character = CharacterDao.getCharacterById(cxn,
+					GameCharacter character = CharacterDao.getInstance().getCharacterById(connection,
 							results.getInt("characterID"));
-					Gear gear = GearDao.getGearByItemID(cxn,
+					Gear gear = GearDao.getInstance().getGearByItemID(connection,
 							results.getInt("itemID"));
-					return new GearInstance(
-							gearInstance.getGearInstanceID(),
-							slot, character, gear
-					);
+					return new GearInstance(gearInstanceId, slot, character, gear);
 				}
-				else {
-					return null;
-				}
+				return null;
 			}
 		}
 	}
 
-	public static List<GearInstance> getGearInstanceByItemID(Connection cxn,
+	public List<GearInstance> getGearInstanceByItemID(Connection connection,
 			Gear gear) throws SQLException {
 		String selectGearInstance = "SELECT * FROM `GearInstance` WHERE itemID = ?";
 		List<GearInstance> gearInstances = new ArrayList<>();
-		try (PreparedStatement stmt = cxn
-				.prepareStatement(selectGearInstance)) {
+		try (PreparedStatement stmt = connection.prepareStatement(selectGearInstance)) {
 			stmt.setInt(1, gear.getItemId());
 			try (ResultSet results = stmt.executeQuery()) {
 				while (results.next()) {
 					int characterID = results.getInt("characterID");
 					int gearSlotID = results.getInt("gearSlotID");
 
-					Character character = CharacterDao.getCharacterById(cxn,
+					GameCharacter character = CharacterDao.getInstance().getCharacterById(connection,
 							characterID);
-					GearSlot gearSlot = GearSlotDao.getGearSlotById(cxn,
+					GearSlot gearSlot = GearSlotDao.getInstance().getGearSlotById(connection,
 							gearSlotID);
 
 					gearInstances.add(
@@ -88,19 +85,40 @@ public class GearInstanceDao {
 		return gearInstances;
 	}
 
-	public static List<GearInstance> getGearByCharacterId(Connection cxn, int characterId) throws SQLException {
+	public List<GearInstance> getAllGearInstances(Connection connection) throws SQLException {
+		String selectGearInstance = "SELECT * FROM `GearInstance`";
+		List<GearInstance> gearInstances = new ArrayList<>();
+		try (PreparedStatement stmt = connection.prepareStatement(selectGearInstance);
+			 ResultSet results = stmt.executeQuery()) {
+			while (results.next()) {
+				int gearInstanceId = results.getInt("gearInstanceID");
+				int characterID = results.getInt("characterID");
+				int gearSlotID = results.getInt("gearSlotID");
+				int itemID = results.getInt("itemID");
+
+				GameCharacter character = CharacterDao.getInstance().getCharacterById(connection, characterID);
+				GearSlot gearSlot = GearSlotDao.getInstance().getGearSlotById(connection, gearSlotID);
+				Gear gear = GearDao.getInstance().getGearByItemID(connection, itemID);
+
+				gearInstances.add(new GearInstance(gearInstanceId, gearSlot, character, gear));
+			}
+		}
+		return gearInstances;
+	}
+
+	public List<GearInstance> getGearByCharacterId(Connection connection, int characterId) throws SQLException {
 		String selectGearInstance = "SELECT * FROM `GearInstance` WHERE characterID = ?";
 		List<GearInstance> gearInstances = new ArrayList<>();
-		try (PreparedStatement stmt = cxn.prepareStatement(selectGearInstance)) {
+		try (PreparedStatement stmt = connection.prepareStatement(selectGearInstance)) {
 			stmt.setInt(1, characterId);
 			try (ResultSet results = stmt.executeQuery()) {
 				while (results.next()) {
 					int gearSlotID = results.getInt("gearSlotID");
 					int itemID = results.getInt("itemID");
 
-					Character character = CharacterDao.getCharacterById(cxn, characterId);
-					GearSlot gearSlot = GearSlotDao.getGearSlotById(cxn, gearSlotID);
-					Gear gear = GearDao.getGearByItemID(cxn, itemID);
+					GameCharacter character = CharacterDao.getInstance().getCharacterById(connection, characterId);
+					GearSlot gearSlot = GearSlotDao.getInstance().getGearSlotById(connection, gearSlotID);
+					Gear gear = GearDao.getInstance().getGearByItemID(connection, itemID);
 
 					gearInstances.add(
 						new GearInstance(results.getInt("gearInstanceID"),

@@ -12,6 +12,9 @@ import java.sql.SQLException;
 
 @WebServlet("/inventory-slot-detail")
 public class InventorySlotDetailServlet extends HttpServlet {
+    private final CharacterDao characterDao = CharacterDao.getInstance();
+    private final InventorySlotDao inventorySlotDao = InventorySlotDao.getInstance();
+    private final ItemDao itemDao = ItemDao.getInstance();
     
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -29,23 +32,25 @@ public class InventorySlotDetailServlet extends HttpServlet {
             int characterId = Integer.parseInt(characterIdStr);
             
             try (Connection connection = ConnectionManager.getConnection()) {
-                GameCharacter character = CharacterDao.getInstance().getCharacterById(connection, characterId);
+                GameCharacter character = characterDao.getCharacterById(connection, characterId);
                 if (character == null) {
                     resp.sendRedirect("inventory-slots");
                     return;
                 }
                 
-                InventorySlot inventorySlot = InventorySlotDao.getInventorySlotByCharacterIdAndSlotNumber(
-                    connection, character, slotNumber);
+                InventorySlot inventorySlot = inventorySlotDao.getInventorySlotByCharacterIdAndSlotNumber(
+                    connection, characterId, slotNumber);
                     
                 if (inventorySlot == null) {
                     resp.sendRedirect("inventory-slots");
                     return;
                 }
                 
+                Item item = itemDao.getItemById(connection, inventorySlot.getItemId());
+                
                 req.setAttribute("inventorySlot", inventorySlot);
                 req.setAttribute("character", character);
-                req.setAttribute("item", inventorySlot.getItem());
+                req.setAttribute("item", item);
                 
                 req.getRequestDispatcher("/inventory-slot-detail.jsp").forward(req, resp);
             }

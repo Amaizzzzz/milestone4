@@ -6,11 +6,13 @@ public class CharacterCurrency {
     private int currencyId;
     private int characterId;
     private int amount;
+    private boolean isActive;
     
-    public CharacterCurrency(int currencyId, int characterId, int amount) {
+    public CharacterCurrency(int currencyId, int characterId, int amount, boolean isActive) {
         this.currencyId = currencyId;
         this.characterId = characterId;
         this.amount = amount;
+        this.isActive = isActive;
     }
     
     public int getCurrencyId() {
@@ -36,10 +38,18 @@ public class CharacterCurrency {
     public void setAmount(int amount) {
         this.amount = amount;
     }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
+    }
     
     @Override
     public int hashCode() {
-        return Objects.hash(currencyId, characterId, amount);
+        return Objects.hash(currencyId, characterId, amount, isActive);
     }
     
     @Override
@@ -54,13 +64,14 @@ public class CharacterCurrency {
         CharacterCurrency other = (CharacterCurrency) obj;
         return currencyId == other.currencyId 
                 && characterId == other.characterId
-                && amount == other.amount;
+                && amount == other.amount
+                && isActive == other.isActive;
     }
     
     @Override
     public String toString() {
         return String.format(
-                "CharacterCurrency(currencyId=%d, characterId=%d, amount=%d)",
-                currencyId, characterId, amount);
+                "CharacterCurrency(currencyId=%d, characterId=%d, amount=%d, isActive=%b)",
+                currencyId, characterId, amount, isActive);
     }
 }

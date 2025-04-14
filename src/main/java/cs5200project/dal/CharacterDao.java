@@ -15,14 +15,18 @@ import cs5200project.model.Race;
 import cs5200project.model.Job;
 
 public class CharacterDao {
-    // Dao classes should not be instantiated.
-    // Pass Connection object as parameter in each method
-    // Each method should be static
-    private CharacterDao() {
-        // Private constructor to prevent instantiation
+    private static CharacterDao instance = null;
+    
+    protected CharacterDao() {}
+    
+    public static CharacterDao getInstance() {
+        if(instance == null) {
+            instance = new CharacterDao();
+        }
+        return instance;
     }
 
-    public static GameCharacter create(Connection cxn, Player player, String firstName, String lastName, Race race, Date creationTime, boolean isNewPlayer, Job job) throws SQLException {
+    public GameCharacter create(Connection cxn, Player player, String firstName, String lastName, Race race, Date creationTime, boolean isNewPlayer, Job job) throws SQLException {
         String query = "INSERT INTO Character (playerID, firstName, lastName, raceID, creationTime, isNewPlayer, currentJobID) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (
             PreparedStatement stmt = 
@@ -35,12 +39,13 @@ public class CharacterDao {
             stmt.setTimestamp(5, new java.sql.Timestamp(creationTime.getTime()));
             stmt.setBoolean(6, isNewPlayer);
             stmt.setInt(7, job.getJobID());
+            stmt.executeUpdate();
             return new GameCharacter(Utils.getAutoIncrementKey(stmt), player.getPlayerID(), firstName, lastName, 
-                race.getRaceID(), creationTime, isNewPlayer, job.getJobID()); 
+                race.getRaceID(), new Timestamp(creationTime.getTime()), isNewPlayer, job.getJobID()); 
             }
     }
     
-    public static GameCharacter create(Connection cxn, int playerID, String firstName, String lastName, 
+    public GameCharacter create(Connection cxn, int playerID, String firstName, String lastName, 
                                      int raceID, Timestamp creationTime, boolean isNewPlayer, 
                                      int currentJobID) throws SQLException {
         String query = "INSERT INTO `Character` (playerID, firstName, lastName, raceID, creationTime, isNewPlayer, currentJobID) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -61,7 +66,7 @@ public class CharacterDao {
         }
     }
 
-    public static GameCharacter getCharacterById(Connection cxn, int id) throws SQLException {
+    public GameCharacter getCharacterById(Connection cxn, int id) throws SQLException {
         String query = "SELECT * FROM Character WHERE characterID = ?";
         try (PreparedStatement stmt = cxn.prepareStatement(query)) {
             stmt.setInt(1, id);
@@ -83,7 +88,7 @@ public class CharacterDao {
         return null;
     }
 
-    public static List<GameCharacter> getAllCharacters(Connection cxn) throws SQLException {
+    public List<GameCharacter> getAllCharacters(Connection cxn) throws SQLException {
         List<GameCharacter> characters = new ArrayList<>();
         String query = "SELECT * FROM `Character`";
         try (PreparedStatement stmt = cxn.prepareStatement(query)) {
@@ -105,7 +110,7 @@ public class CharacterDao {
         return characters;
     }
 
-    public static List<GameCharacter> getFilteredCharacters(Connection cxn, 
+    public List<GameCharacter> getFilteredCharacters(Connection cxn, 
             String nameSearch, Integer raceId, String sortBy) throws SQLException {
         List<GameCharacter> characters = new ArrayList<>();
         StringBuilder queryBuilder = new StringBuilder(
@@ -167,7 +172,7 @@ public class CharacterDao {
         return characters;
     }
 
-    public static boolean deleteCharacter(Connection cxn, int characterId) throws SQLException {
+    public boolean deleteCharacter(Connection cxn, int characterId) throws SQLException {
         String query = "DELETE FROM `Character` WHERE characterID = ?";
         try (PreparedStatement stmt = cxn.prepareStatement(query)) {
             stmt.setInt(1, characterId);
@@ -176,7 +181,7 @@ public class CharacterDao {
         }
     }
 
-    public static List<GameCharacter> getCharactersByRace(Connection cxn, int raceId) throws SQLException {
+    public List<GameCharacter> getCharactersByRace(Connection cxn, int raceId) throws SQLException {
         List<GameCharacter> characters = new ArrayList<>();
         String query = "SELECT * FROM `Character` WHERE raceID = ?";
         try (PreparedStatement stmt = cxn.prepareStatement(query)) {

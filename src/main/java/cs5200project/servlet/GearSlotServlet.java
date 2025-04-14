@@ -17,10 +17,12 @@ import java.util.List;
 
 @WebServlet("/gearslots")
 public class GearSlotServlet extends HttpServlet {
+    private final GearSlotDao gearSlotDao = GearSlotDao.getInstance();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try (Connection connection = ConnectionManager.getConnection()) {
-            List<GearSlot> gearSlots = GearSlotDao.getAllGearSlots(connection);
+            List<GearSlot> gearSlots = gearSlotDao.getAllGearSlots(connection);
             req.setAttribute("gearSlots", gearSlots);
             req.getRequestDispatcher("/gearslot.jsp").forward(req, resp);
         } catch (SQLException e) {

@@ -12,14 +12,26 @@ import cs5200project.model.Gear;
 import cs5200project.model.Statistic;
 
 public class GearStatisticBonusDao {
+	private static GearStatisticBonusDao instance = null;
+	private final GearDao gearDao;
+	private final StatisticDao statisticDao;
+
 	private GearStatisticBonusDao() {
+		gearDao = GearDao.getInstance();
+		statisticDao = StatisticDao.getInstance();
 	}
 
-	public static GearStatisticBonus create(Connection cxn, Gear gear,
+	public static GearStatisticBonusDao getInstance() {
+		if (instance == null) {
+			instance = new GearStatisticBonusDao();
+		}
+		return instance;
+	}
+
+	public GearStatisticBonus create(Connection cxn, Gear gear,
 			Statistic stats, int bonusValue) throws SQLException {
-		String insertBonus = """
-				INSERT INTO GearStatisticBonus (itemID, statID, bonusValue)
-				VALUES (?, ?, ?);""";
+		String insertBonus = "INSERT INTO GearStatisticBonus (itemID, statID, bonusValue) " +
+						   "VALUES (?, ?, ?)";
 		try (PreparedStatement insertStmt = cxn.prepareStatement(insertBonus)) {
 			insertStmt.setInt(1, gear.getItemId());
 			insertStmt.setInt(2, stats.getStatisticID());
@@ -29,12 +41,10 @@ public class GearStatisticBonusDao {
 		}
 	}
 
-	public static GearStatisticBonus getGearStatisticBonusByItemIdAndStatId(
+	public GearStatisticBonus getGearStatisticBonusByItemIdAndStatId(
 			Connection cxn, Gear gear, Statistic stats) throws SQLException {
-		String selectBonus = """
-				SELECT * FROM GearStatisticBonus
-					WHERE itemID = ? AND statID = ?;
-				""";
+		String selectBonus = "SELECT * FROM GearStatisticBonus " +
+						   "WHERE itemID = ? AND statID = ?";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectBonus)) {
 			selectStmt.setInt(1, gear.getItemId());
 			selectStmt.setInt(2, stats.getStatisticID());
@@ -50,20 +60,18 @@ public class GearStatisticBonusDao {
 		}
 	}
 
-	public static List<GearStatisticBonus> getGearStatisticBonusByBonusValue(
-			Connection cxn,
-			int bonusValue) throws SQLException {
-		String selectBonus = "SELECT * FROM GearStatisticBonus WHERE bonusValue = ?;";
+	public List<GearStatisticBonus> getGearStatisticBonusByBonusValue(
+			Connection cxn, int bonusValue) throws SQLException {
+		String selectBonus = "SELECT * FROM GearStatisticBonus WHERE bonusValue = ?";
 		List<GearStatisticBonus> bonusList = new ArrayList<>();
 		try (PreparedStatement stmt = cxn.prepareStatement(selectBonus)) {
 			stmt.setInt(1, bonusValue);
 			try (ResultSet results = stmt.executeQuery()) {
 				while (results.next()) {
 					int itemId = results.getInt("itemID");
-					Gear gear = GearDao.getGearByItemID(cxn, itemId);
+					Gear gear = gearDao.getGearByItemID(cxn, itemId);
 					int statId = results.getInt("statID");
-					Statistic stats = StatisticDao.getStatisticByID(cxn,
-							statId);
+					Statistic stats = statisticDao.getStatisticByID(cxn, statId);
 					bonusList.add(new GearStatisticBonus(
 							gear, stats, results.getInt("bonusValue")));
 				}

@@ -5,11 +5,11 @@ import java.util.Objects;
 public class GearInstance {
 	private int gearInstanceID;
 	private Item item;
-	private Character character;
+	private GameCharacter character;
 	private GearSlot gearSlot;
 
 	public GearInstance(int gearInstanceID, GearSlot gearSlot,
-			Character character, Item item) {
+			GameCharacter character, Item item) {
 		this.gearInstanceID = gearInstanceID;
 		this.item = item;
 		this.character = character;
@@ -36,11 +36,11 @@ public class GearInstance {
 		return item != null ? item.getItemId() : 0;
 	}
 
-	public Character getCharacter() {
+	public GameCharacter getCharacter() {
 		return character;
 	}
 
-	public void setCharacter(Character character) {
+	public void setCharacter(GameCharacter character) {
 		this.character = character;
 	}
 
@@ -52,10 +52,9 @@ public class GearInstance {
 		this.gearSlot = gearSlot;
 	}
 
-
 	@Override
 	public int hashCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return Objects.hash(character, gearInstanceID, gearSlot, item);
 	}
 
 	@Override

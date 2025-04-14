@@ -1,96 +1,88 @@
 package cs5200project.servlet;
 
-import cs5200project.dal.WeaponDao;
-import cs5200project.dal.JobDao;
-import cs5200project.model.Weapon;
-import cs5200project.model.Job;
-import cs5200project.model.WeaponDurability;
-import cs5200project.model.RankValue;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
+
+import cs5200project.dal.ConnectionManager;
+import cs5200project.dal.JobDao;
+import cs5200project.dal.WeaponDao;
+import cs5200project.model.Job;
+import cs5200project.model.Weapon;
+import cs5200project.model.Weapon.WeaponDurability;
+import cs5200project.model.Weapon.RankValue;
 
 @WebServlet("/weapon")
 public class WeaponDetailServlet extends HttpServlet {
-    
+    private static final long serialVersionUID = 1L;
+    private final WeaponDao weaponDao = WeaponDao.getInstance();
+    private final JobDao jobDao = JobDao.getInstance();
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        String weaponIdStr = req.getParameter("id");
-        if (weaponIdStr == null || weaponIdStr.trim().isEmpty()) {
-            resp.sendRedirect("weapons");
-            return;
-        }
-
+        String itemIdStr = request.getParameter("id");
+        
         try (Connection connection = ConnectionManager.getConnection()) {
-            int weaponId = Integer.parseInt(weaponIdStr);
-            Weapon weapon = WeaponDao.getInstance().getWeaponById(connection, weaponId);
-            if (weapon == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Weapon not found");
-                return;
+            if (itemIdStr != null && !itemIdStr.isEmpty()) {
+                int itemId = Integer.parseInt(itemIdStr);
+                Weapon weapon = weaponDao.getWeaponById(connection, itemId);
+                request.setAttribute("weapon", weapon);
+                
+                List<Job> jobs = jobDao.getJobsForWeapon(connection, itemId);
+                request.setAttribute("jobs", jobs);
             }
-
-            List<Job> requiredJobs = JobDao.getInstance().getJobsForWeapon(connection, weaponId);
-
-            req.setAttribute("weapon", weapon);
-            req.setAttribute("requiredJobs", requiredJobs);
-            req.getRequestDispatcher("/weapon-detail.jsp").forward(req, resp);
+            request.getRequestDispatcher("/weapon.jsp").forward(request, response);
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new ServletException("Error retrieving weapon details", e);
-        } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid weapon ID format");
+            throw new ServletException("Error accessing the weapon", e);
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        String action = req.getParameter("action");
-        String weaponIdStr = req.getParameter("id");
-
-        if (weaponIdStr == null || weaponIdStr.trim().isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Weapon ID is required");
-            return;
-        }
+        String action = request.getParameter("action");
+        String itemIdStr = request.getParameter("id");
+        int itemId = Integer.parseInt(itemIdStr);
 
         try (Connection connection = ConnectionManager.getConnection()) {
-            int weaponId = Integer.parseInt(weaponIdStr);
-
             if ("delete".equals(action)) {
-                WeaponDao.getInstance().delete(connection, weaponId);
-                resp.sendRedirect("weapons");
-            } else {
-                // Handle update
-                String itemName = req.getParameter("itemName");
-                int itemLevel = Integer.parseInt(req.getParameter("itemLevel"));
-                int maxStackSize = Integer.parseInt(req.getParameter("maxStackSize"));
-                double price = Double.parseDouble(req.getParameter("price"));
-                int quantity = Integer.parseInt(req.getParameter("quantity"));
-                int requiredLevel = Integer.parseInt(req.getParameter("requiredLevel"));
-                int damage = Integer.parseInt(req.getParameter("damage"));
-                int attackSpeed = Integer.parseInt(req.getParameter("attackSpeed"));
-                String weaponType = req.getParameter("weaponType");
-                WeaponDurability durability = WeaponDurability.valueOf(req.getParameter("durability"));
-                RankValue rankValue = RankValue.valueOf(req.getParameter("rankValue"));
+                weaponDao.delete(connection, itemId);
+                response.sendRedirect(request.getContextPath() + "/weapons");
+                return;
+            } else if ("update".equals(action)) {
+                String itemName = request.getParameter("itemName");
+                int itemLevel = Integer.parseInt(request.getParameter("itemLevel"));
+                int maxStackSize = Integer.parseInt(request.getParameter("maxStackSize"));
+                double price = Double.parseDouble(request.getParameter("price"));
+                int quantity = Integer.parseInt(request.getParameter("quantity"));
+                int requiredLevel = Integer.parseInt(request.getParameter("requiredLevel"));
+                int damage = Integer.parseInt(request.getParameter("damage"));
+                int attackSpeed = Integer.parseInt(request.getParameter("attackSpeed"));
+                String weaponType = request.getParameter("weaponType");
+                WeaponDurability durability = WeaponDurability.valueOf(request.getParameter("weaponDurability"));
+                RankValue rankValue = RankValue.valueOf(request.getParameter("rankValue"));
 
-                Weapon weapon = WeaponDao.getInstance().update(connection, weaponId, itemName,
-                        itemLevel, maxStackSize, price, quantity, requiredLevel, damage,
-                        attackSpeed, weaponType, durability, rankValue);
-                resp.sendRedirect("weapon?id=" + weapon.getItemID());
+                weaponDao.update(connection, itemId, itemName, itemLevel, maxStackSize, price, quantity,
+                        requiredLevel, damage, attackSpeed, weaponType, durability, rankValue);
+
+                Weapon weapon = weaponDao.getWeaponById(connection, itemId);
+                request.setAttribute("weapon", weapon);
+                request.setAttribute("success", "Weapon updated successfully");
+                request.getRequestDispatcher("/weapon.jsp").forward(request, response);
+                return;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new ServletException("Error updating weapon", e);
-        } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid number format");
+            throw new ServletException("Error processing weapon action", e);
         }
     }
 } 

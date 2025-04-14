@@ -11,37 +11,38 @@ import java.util.List;
 import cs5200project.model.LevelThreshold;
 
 public class LevelThresholdDao {
-	private LevelThresholdDao() {
+	private static LevelThresholdDao instance = null;
+	
+	protected LevelThresholdDao() {}
+	
+	public static LevelThresholdDao getInstance() {
+		if(instance == null) {
+			instance = new LevelThresholdDao();
+		}
+		return instance;
 	}
 
-	public static LevelThreshold create(Connection cxn, int charLevel, int requiredXP) throws SQLException {
-		final String insertLevelThreshold = """
-			INSERT INTO LevelThreshold(charLevel, requiredXP)
-			VALUES (?, ?);
-		""";
-
-		try (PreparedStatement insertStmt = cxn.prepareStatement(insertLevelThreshold)) {
-			insertStmt.setInt(1, charLevel);
-			insertStmt.setInt(2, requiredXP);
+	public LevelThreshold create(Connection connection, int level, int xpRequired) throws SQLException {
+		String insertLevelThreshold = "INSERT INTO LevelThreshold(level, xpRequired) VALUES(?, ?)";
+		try (PreparedStatement insertStmt = connection.prepareStatement(insertLevelThreshold,
+				Statement.RETURN_GENERATED_KEYS)) {
+			insertStmt.setInt(1, level);
+			insertStmt.setInt(2, xpRequired);
 			insertStmt.executeUpdate();
-
-			return new LevelThreshold(charLevel, requiredXP);
+			
+			return new LevelThreshold(level, xpRequired);
 		}
 	}
 
-	public static LevelThreshold getLevelThresholdByLevel(Connection cxn, int charLevel) throws SQLException {
-		final String selectLevelThreshold = """
-			SELECT * FROM LevelThreshold 
-			WHERE charLevel = ?;
-		""";
-		try (PreparedStatement selectStmt = cxn.prepareStatement(selectLevelThreshold)) {
-			selectStmt.setInt(1, charLevel);
+	public LevelThreshold getLevelThresholdByLevel(Connection connection, int level) throws SQLException {
+		String selectLevelThreshold = "SELECT * FROM LevelThreshold WHERE level = ?";
+		try (PreparedStatement selectStmt = connection.prepareStatement(selectLevelThreshold)) {
+			selectStmt.setInt(1, level);
 			try (ResultSet results = selectStmt.executeQuery()) {
 				if (results.next()) {
 					return new LevelThreshold(
-						results.getInt("charLevel"),
-						results.getInt("requiredXP")
-					);
+							results.getInt("level"),
+							results.getInt("xpRequired"));
 				} else {
 					return null;
 				}
@@ -49,16 +50,33 @@ public class LevelThresholdDao {
 		}
 	}
 
-	public static List<LevelThreshold> getAllLevelThresholds(Connection cxn) throws SQLException {
+	public void update(Connection connection, int level, int xpRequired) throws SQLException {
+		String update = "UPDATE LevelThreshold SET xpRequired = ? WHERE level = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(update)) {
+			stmt.setInt(1, xpRequired);
+			stmt.setInt(2, level);
+			stmt.executeUpdate();
+		}
+	}
+
+	public void delete(Connection connection, LevelThreshold levelThreshold) throws SQLException {
+		String delete = "DELETE FROM LevelThreshold WHERE level = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(delete)) {
+			stmt.setInt(1, levelThreshold.getCharLevel());
+			stmt.executeUpdate();
+		}
+	}
+
+	public List<LevelThreshold> getAllLevelThresholds(Connection connection) throws SQLException {
 		List<LevelThreshold> thresholds = new ArrayList<>();
-		String query = "SELECT * FROM LevelThreshold ORDER BY charLevel";
+		String query = "SELECT * FROM LevelThreshold ORDER BY level";
 		
-		try (PreparedStatement stmt = cxn.prepareStatement(query)) {
+		try (PreparedStatement stmt = connection.prepareStatement(query)) {
 			try (ResultSet rs = stmt.executeQuery()) {
 				while (rs.next()) {
 					thresholds.add(new LevelThreshold(
-						rs.getInt("charLevel"),
-						rs.getInt("requiredXP")
+						rs.getInt("level"),
+						rs.getInt("xpRequired")
 					));
 				}
 			}
@@ -66,14 +84,10 @@ public class LevelThresholdDao {
 		return thresholds;
 	}
 
-	public static <T extends LevelThreshold> T updateRequiredXP(Connection cxn, T levelThreshold,
-			int newRequiredXP) throws SQLException {
-		final String update = """
-			UPDATE LevelThreshold 
-			SET requiredXP = ? 
-			WHERE charLevel = ?;
-		""";
-		try (PreparedStatement updateStmt = cxn.prepareStatement(update)) {
+	public <T extends LevelThreshold> T updateXPRequired(Connection connection, T levelThreshold, int newRequiredXP) 
+			throws SQLException {
+		String update = "UPDATE LevelThreshold SET xpRequired = ? WHERE level = ?";
+		try (PreparedStatement updateStmt = connection.prepareStatement(update)) {
 			updateStmt.setInt(1, newRequiredXP);
 			updateStmt.setInt(2, levelThreshold.getCharLevel());
 			updateStmt.executeUpdate();
@@ -83,9 +97,9 @@ public class LevelThresholdDao {
 		}
 	}
 
-	public static int getLevelForXP(Connection cxn, int xp) throws SQLException {
-		String query = "SELECT MAX(charLevel) as level FROM LevelThreshold WHERE requiredXP <= ?";
-		try (PreparedStatement stmt = cxn.prepareStatement(query)) {
+	public int getLevelForXP(Connection connection, int xp) throws SQLException {
+		String query = "SELECT MAX(level) as level FROM LevelThreshold WHERE xpRequired <= ?";
+		try (PreparedStatement stmt = connection.prepareStatement(query)) {
 			stmt.setInt(1, xp);
 			try (ResultSet rs = stmt.executeQuery()) {
 				if (rs.next()) {
@@ -93,19 +107,19 @@ public class LevelThresholdDao {
 				}
 			}
 		}
-		return 1; // Default to level 1 if no threshold found
+		return 1; // Default to level 1 if no threshold is found
 	}
 	
-	public static int getXPForNextLevel(Connection cxn, int currentLevel) throws SQLException {
-		String query = "SELECT requiredXP FROM LevelThreshold WHERE charLevel = ?";
-		try (PreparedStatement stmt = cxn.prepareStatement(query)) {
+	public int getXPForNextLevel(Connection connection, int currentLevel) throws SQLException {
+		String query = "SELECT xpRequired FROM LevelThreshold WHERE level = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(query)) {
 			stmt.setInt(1, currentLevel + 1);
 			try (ResultSet rs = stmt.executeQuery()) {
 				if (rs.next()) {
-					return rs.getInt("requiredXP");
+					return rs.getInt("xpRequired");
 				}
 			}
 		}
-		return Integer.MAX_VALUE; // Return max value if no next level found
+		return Integer.MAX_VALUE; // Return max value if no next level exists
 	}
 }

@@ -18,6 +18,8 @@ import java.util.List;
 
 @WebServlet("/race")
 public class RaceDetailServlet extends HttpServlet {
+    private final RaceDao raceDao = RaceDao.getInstance();
+    private final CharacterDao characterDao = CharacterDao.getInstance();
     
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
@@ -30,13 +32,13 @@ public class RaceDetailServlet extends HttpServlet {
 
         try (Connection connection = ConnectionManager.getConnection()) {
             int raceId = Integer.parseInt(raceIdStr);
-            Race race = RaceDao.getRaceById(connection, raceId);
+            Race race = raceDao.getRaceById(connection, raceId);
             if (race == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Race not found");
                 return;
             }
 
-            List<GameCharacter> characters = CharacterDao.getCharactersByRace(connection, raceId);
+            List<GameCharacter> characters = characterDao.getCharactersByRace(connection, raceId);
 
             req.setAttribute("race", race);
             req.setAttribute("characters", characters);
@@ -65,7 +67,7 @@ public class RaceDetailServlet extends HttpServlet {
 
             if ("delete".equals(action)) {
                 Race race = new Race(raceId, "");  // Create a temporary Race object for deletion
-                RaceDao.delete(connection, race);
+                raceDao.delete(connection, race);
                 resp.sendRedirect("races");
             } else {
                 // Handle update
@@ -75,7 +77,7 @@ public class RaceDetailServlet extends HttpServlet {
                 int baseDexterity = Integer.parseInt(req.getParameter("baseDexterity"));
                 int baseIntelligence = Integer.parseInt(req.getParameter("baseIntelligence"));
 
-                Race race = RaceDao.update(connection, raceId, raceName, 
+                Race race = raceDao.update(connection, raceId, raceName, 
                         description, baseStrength, baseDexterity, baseIntelligence);
                 resp.sendRedirect("race?id=" + race.getRaceID());
             }

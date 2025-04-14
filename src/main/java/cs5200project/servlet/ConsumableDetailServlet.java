@@ -23,6 +23,10 @@ import java.util.List;
 
 @WebServlet("/consumable")
 public class ConsumableDetailServlet extends HttpServlet {
+    private final ConsumableDao consumableDao = ConsumableDao.getInstance();
+    private final StatTypeDao statTypeDao = StatTypeDao.getInstance();
+    private final StatisticDao statisticDao = StatisticDao.getInstance();
+    private final ConsumablesStatsBonusDao consumablesStatsBonusDao = ConsumablesStatsBonusDao.getInstance();
     
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
@@ -35,7 +39,7 @@ public class ConsumableDetailServlet extends HttpServlet {
 
         try (Connection connection = ConnectionManager.getConnection()) {
             int consumableId = Integer.parseInt(consumableIdStr);
-            Consumable consumable = ConsumableDao.getByConsumablesId(connection, consumableId);
+            Consumable consumable = consumableDao.getByConsumablesId(connection, consumableId);
             if (consumable == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Consumable not found");
                 return;
@@ -43,11 +47,11 @@ public class ConsumableDetailServlet extends HttpServlet {
 
             // Get all stat types and their corresponding bonuses
             List<ConsumablesStatsBonus> statBonuses = new ArrayList<>();
-            List<StatType> allStatTypes = StatTypeDao.getStatTypeByName(connection, "");
+            List<StatType> allStatTypes = statTypeDao.getStatTypeByName(connection, "");
             for (StatType statType : allStatTypes) {
-                Statistic stat = StatisticDao.getStatisticByID(connection, statType.getStatTypeID());
+                Statistic stat = statisticDao.getStatisticByID(connection, statType.getStatTypeID());
                 if (stat != null) {
-                    ConsumablesStatsBonus bonus = ConsumablesStatsBonusDao.getByItemIdAndStatId(connection, consumable, stat);
+                    ConsumablesStatsBonus bonus = consumablesStatsBonusDao.getByItemIdAndStatId(connection, consumable, stat);
                     if (bonus != null) {
                         statBonuses.add(bonus);
                     }
@@ -80,9 +84,9 @@ public class ConsumableDetailServlet extends HttpServlet {
             int consumableId = Integer.parseInt(consumableIdStr);
 
             if ("delete".equals(action)) {
-                Consumable consumable = ConsumableDao.getByConsumablesId(connection, consumableId);
+                Consumable consumable = consumableDao.getByConsumablesId(connection, consumableId);
                 if (consumable != null) {
-                    ConsumableDao.delete(connection, consumable);
+                    consumableDao.delete(connection, consumable);
                 }
                 resp.sendRedirect("consumables");
             } else {
@@ -95,10 +99,10 @@ public class ConsumableDetailServlet extends HttpServlet {
                 String description = req.getParameter("description");
                 String source = req.getParameter("source");
                 
-                Consumable existingConsumable = ConsumableDao.getByConsumablesId(connection, consumableId);
+                Consumable existingConsumable = consumableDao.getByConsumablesId(connection, consumableId);
                 if (existingConsumable != null) {
-                    Consumable updatedConsumable = ConsumableDao.create(connection, 
-                        consumableId, itemName, itemLevel, maxStackSize, price, quantity,
+                    Consumable updatedConsumable = consumableDao.create(connection, 
+                        itemName, itemLevel, maxStackSize, price, quantity,
                         existingConsumable.getConsumablesType(), description, source);
                     resp.sendRedirect("consumable?id=" + updatedConsumable.getItemId());
                 } else {

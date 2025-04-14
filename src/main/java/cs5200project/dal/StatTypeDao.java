@@ -11,6 +11,16 @@ import java.util.List;
 import cs5200project.model.StatType;
 
 public class StatTypeDao {
+	private static StatTypeDao instance = null;
+	
+	protected StatTypeDao() {}
+	
+	public static StatTypeDao getInstance() {
+		if(instance == null) {
+			instance = new StatTypeDao();
+		}
+		return instance;
+	}
 
 	/**
 	 * Inserts a new record into the StatType table.
@@ -20,7 +30,7 @@ public class StatTypeDao {
 	 * @param description A description or additional info
 	 * @return The newly inserted StatType object
 	 */
-	public static StatType create(Connection cxn, String name,
+	public StatType create(Connection cxn, String name,
 			String description) throws SQLException {
 		String sql = "INSERT INTO `StatType` (statType, description) VALUES (?, ?)";
 		try (PreparedStatement ps = cxn.prepareStatement(sql,
@@ -40,7 +50,7 @@ public class StatTypeDao {
 	 * @param statTypeID The primary key to look up
 	 * @return The matching StatType object, or null if not found
 	 */
-	public static StatType getStatTypeByID(Connection cxn, int statTypeID)
+	public StatType getStatTypeByID(Connection cxn, int statTypeID)
 			throws SQLException {
 		String sql = "SELECT statTypeID, statType, description FROM StatType WHERE statTypeID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {
@@ -67,7 +77,7 @@ public class StatTypeDao {
 	 * @param newDescription The new description value
 	 * @return The updated StatType object
 	 */
-	public static StatType updateDescription(Connection cxn, StatType statType,
+	public StatType updateDescription(Connection cxn, StatType statType,
 			String newDescription) throws SQLException {
 		String sql = "UPDATE StatType SET description = ? WHERE statTypeID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {
@@ -87,7 +97,7 @@ public class StatTypeDao {
 	 * @param statType The StatType object to delete (must have a valid
 	 *                 statTypeID)
 	 */
-	public static void delete(Connection cxn, StatType statType)
+	public void delete(Connection cxn, StatType statType)
 			throws SQLException {
 		String sql = "DELETE FROM StatType WHERE statTypeID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {
@@ -104,7 +114,7 @@ public class StatTypeDao {
 	 * @param partialName The substring to match against the 'name' column
 	 * @return A list of matching StatType objects (could be empty if no match)
 	 */
-	public static List<StatType> getStatTypeByName(Connection cxn,
+	public List<StatType> getStatTypeByName(Connection cxn,
 			String partialName) throws SQLException {
 		String sql = "SELECT statTypeID, statType, description FROM StatType WHERE statType LIKE ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {

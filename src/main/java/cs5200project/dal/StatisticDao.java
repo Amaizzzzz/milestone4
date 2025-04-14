@@ -11,8 +11,18 @@ import java.util.List;
 import cs5200project.model.Statistic;
 
 public class StatisticDao {
+	private static StatisticDao instance = null;
+	
+	protected StatisticDao() {}
+	
+	public static StatisticDao getInstance() {
+		if(instance == null) {
+			instance = new StatisticDao();
+		}
+		return instance;
+	}
 
-	public static Statistic create(Connection cxn, int statTypeID, int statValue) throws SQLException {
+	public Statistic create(Connection cxn, int statTypeID, int statValue) throws SQLException {
 		String sql = "INSERT INTO `Statistic` (statTypeID, statValue) VALUES (?, ?)";
 		try (PreparedStatement ps = cxn.prepareStatement(sql,
 				Statement.RETURN_GENERATED_KEYS)) {
@@ -31,7 +41,7 @@ public class StatisticDao {
 	 * @return A matching Statistic object, or null if not found
 	 * @throws SQLException
 	 */
-	public static Statistic getStatisticByID(Connection cxn, int statisticID)
+	public Statistic getStatisticByID(Connection cxn, int statisticID)
 			throws SQLException {
 		String sql = "SELECT statisticID, statValue, statTypeID FROM Statistic WHERE statisticID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {
@@ -49,7 +59,7 @@ public class StatisticDao {
 		return null;
 	}
 
-	public static Statistic updateStatValue(Connection cxn, Statistic stat,
+	public Statistic updateStatValue(Connection cxn, Statistic stat,
 			int newValue) throws SQLException {
 		String sql = "UPDATE Statistic SET statValue = ? WHERE statisticID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {
@@ -62,7 +72,7 @@ public class StatisticDao {
 		return stat;
 	}
 
-	public static void delete(Connection cxn, Statistic stat)
+	public void delete(Connection cxn, Statistic stat)
 			throws SQLException {
 		String sql = "DELETE FROM Statistic WHERE statisticID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {
@@ -71,7 +81,7 @@ public class StatisticDao {
 		}
 	}
 
-	public static List<Statistic> getAllByStatType(Connection cxn,
+	public List<Statistic> getAllByStatType(Connection cxn,
 			int statTypeID) throws SQLException {
 		String sql = "SELECT statisticID, statValue, statTypeID FROM Statistic WHERE statTypeID = ?";
 		try (PreparedStatement ps = cxn.prepareStatement(sql)) {

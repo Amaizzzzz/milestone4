@@ -11,35 +11,53 @@ import java.util.List;
 import cs5200project.model.GearSlot;
 
 public class GearSlotDao {
-	private GearSlotDao() {
+	private static GearSlotDao instance = null;
+	
+	protected GearSlotDao() {}
+	
+	public static GearSlotDao getInstance() {
+		if(instance == null) {
+			instance = new GearSlotDao();
+		}
+		return instance;
 	}
 
-	public static GearSlot create(Connection cxn, String slotName)
-			throws SQLException {
-		final String insertGearSlot = "INSERT INTO GearSlot (slotName) VALUES (?);";
-		try (PreparedStatement insertStmt = cxn.prepareStatement(insertGearSlot,
+	public GearSlot create(Connection connection, String slotName) throws SQLException {
+		String insertGearSlot = "INSERT INTO GearSlot(slotName) VALUES(?)";
+		try (PreparedStatement stmt = connection.prepareStatement(insertGearSlot,
 				Statement.RETURN_GENERATED_KEYS)) {
-			insertStmt.setString(1, slotName);
-			insertStmt.executeUpdate();
-
-			return new GearSlot(Utils.getAutoIncrementKey(insertStmt), slotName);	
+			stmt.setString(1, slotName);
+			stmt.executeUpdate();
+			
+			return new GearSlot(Utils.getAutoIncrementKey(stmt), slotName);
 		}
 	}
 
-	public static GearSlot getGearSlotById(Connection cxn, int slotID)
-			throws SQLException {
-		final String selectGearSlot = "SELECT * FROM GearSlot WHERE slotID = ?;";
-		try (PreparedStatement selectStmt = cxn
-				.prepareStatement(selectGearSlot)) {
-			selectStmt.setInt(1, slotID);
-			try (ResultSet results = selectStmt.executeQuery()) {
+	public GearSlot getGearSlotById(Connection connection, int slotId) throws SQLException {
+		String selectGearSlot = "SELECT * FROM GearSlot WHERE slotID = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(selectGearSlot)) {
+			stmt.setInt(1, slotId);
+			try (ResultSet results = stmt.executeQuery()) {
 				if (results.next()) {
-					return new GearSlot(slotID, results.getString("slotName"));
-				} else {
-					return null;
+					return new GearSlot(results.getInt("slotID"),
+							results.getString("slotName"));
 				}
+				return null;
 			}
 		}
+	}
+
+	public List<GearSlot> getAllGearSlots(Connection connection) throws SQLException {
+		String selectGearSlot = "SELECT * FROM GearSlot";
+		List<GearSlot> gearSlots = new ArrayList<>();
+		try (PreparedStatement stmt = connection.prepareStatement(selectGearSlot);
+			 ResultSet results = stmt.executeQuery()) {
+			while (results.next()) {
+				gearSlots.add(new GearSlot(results.getInt("slotID"),
+						results.getString("slotName")));
+			}
+		}
+		return gearSlots;
 	}
 
 	public static List<GearSlot> getGearSlotsByName(Connection cxn,
@@ -63,20 +81,6 @@ public class GearSlotDao {
 				.prepareStatement(deleteGearSlot)) {
 			deleteStmt.setInt(1, gearSlot.getSlotID());
 			deleteStmt.executeUpdate();
-		}
-	}
-
-	public static List<GearSlot> getAllGearSlots(Connection cxn) throws SQLException {
-		final String selectAllGearSlots = "SELECT * FROM GearSlot;";
-		List<GearSlot> gearSlots = new ArrayList<>();
-		try (PreparedStatement stmt = cxn.prepareStatement(selectAllGearSlots);
-				ResultSet results = stmt.executeQuery()) {
-			while (results.next()) {
-				gearSlots.add(new GearSlot(
-					results.getInt("slotID"),
-					results.getString("slotName")));
-			}
-			return gearSlots;
 		}
 	}
 }

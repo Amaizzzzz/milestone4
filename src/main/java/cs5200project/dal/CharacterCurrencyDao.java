@@ -1,6 +1,5 @@
 package cs5200project.dal;
 
-import cs5200project.model.CharacterCurrency;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,59 +7,95 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import cs5200project.model.CharacterCurrency;
+import cs5200project.util.ConnectionManager;
+
 public class CharacterCurrencyDao {
-    private static CharacterCurrencyDao instance = null;
+    protected static CharacterCurrencyDao instance = null;
     
-    private CharacterCurrencyDao() {}
+    protected CharacterCurrencyDao() {
+        // Exists only to defeat instantiation.
+    }
     
     public static CharacterCurrencyDao getInstance() {
-        if (instance == null) {
+        if(instance == null) {
             instance = new CharacterCurrencyDao();
         }
         return instance;
     }
-    
-    public CharacterCurrency create(Connection connection, int currencyId, int characterId, int amount) throws SQLException {
-        String sql = "INSERT INTO CharacterCurrency(currencyId, characterId, amount) VALUES (?, ?, ?)";
-        
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, currencyId);
-            statement.setInt(2, characterId);
-            statement.setInt(3, amount);
-            statement.executeUpdate();
-            
-            return new CharacterCurrency(currencyId, characterId, amount);
-        }
-    }
-    
-    public List<CharacterCurrency> getCharacterCurrencies(Connection connection, int characterId) throws SQLException {
+
+    public List<CharacterCurrency> getAllCharacterCurrencies() throws SQLException {
         List<CharacterCurrency> currencies = new ArrayList<>();
-        String sql = "SELECT * FROM CharacterCurrency WHERE characterId = ?";
-        
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, characterId);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    CharacterCurrency currency = new CharacterCurrency(
-                        rs.getInt("currencyId"),
-                        rs.getInt("characterId"),
-                        rs.getInt("amount")
-                    );
-                    currencies.add(currency);
-                }
+        String selectAll = "SELECT characterId, currencyId, amount, isActive FROM CharacterCurrency";
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement selectStmt = connection.prepareStatement(selectAll);
+             ResultSet rs = selectStmt.executeQuery()) {
+            while (rs.next()) {
+                currencies.add(new CharacterCurrency(
+                    rs.getInt("currencyId"),
+                    rs.getInt("characterId"),
+                    rs.getInt("amount"),
+                    rs.getBoolean("isActive")
+                ));
             }
         }
         return currencies;
     }
-    
-    public void updateCurrencyAmount(Connection connection, int currencyId, int characterId, int newAmount) throws SQLException {
-        String sql = "UPDATE CharacterCurrency SET amount = ? WHERE currencyId = ? AND characterId = ?";
-        
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, newAmount);
-            statement.setInt(2, currencyId);
-            statement.setInt(3, characterId);
-            statement.executeUpdate();
+
+    public CharacterCurrency create(CharacterCurrency currency) throws SQLException {
+        String insertCurrency = "INSERT INTO CharacterCurrency(characterId, currencyId, amount, isActive) VALUES(?,?,?,?)";
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement insertStmt = connection.prepareStatement(insertCurrency)) {
+            insertStmt.setInt(1, currency.getCharacterId());
+            insertStmt.setInt(2, currency.getCurrencyId());
+            insertStmt.setInt(3, currency.getAmount());
+            insertStmt.setBoolean(4, currency.isActive());
+            insertStmt.executeUpdate();
+            return currency;
         }
     }
+
+    public CharacterCurrency update(CharacterCurrency currency) throws SQLException {
+        String updateAmount = "UPDATE CharacterCurrency SET amount = ?, isActive = ? WHERE characterId = ? AND currencyId = ?";
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement updateStmt = connection.prepareStatement(updateAmount)) {
+            updateStmt.setInt(1, currency.getAmount());
+            updateStmt.setBoolean(2, currency.isActive());
+            updateStmt.setInt(3, currency.getCharacterId());
+            updateStmt.setInt(4, currency.getCurrencyId());
+            updateStmt.executeUpdate();
+            return currency;
+        }
+    }
+
+    public void delete(int characterId, int currencyId) throws SQLException {
+        String deleteCurrency = "DELETE FROM CharacterCurrency WHERE characterId = ? AND currencyId = ?";
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement deleteStmt = connection.prepareStatement(deleteCurrency)) {
+            deleteStmt.setInt(1, characterId);
+            deleteStmt.setInt(2, currencyId);
+            deleteStmt.executeUpdate();
+        }
+    }
+
+    public CharacterCurrency getCharacterCurrency(int characterId, int currencyId) throws SQLException {
+        String selectCurrency = "SELECT characterId, currencyId, amount, isActive FROM CharacterCurrency WHERE characterId = ? AND currencyId = ?";
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement selectStmt = connection.prepareStatement(selectCurrency)) {
+            selectStmt.setInt(1, characterId);
+            selectStmt.setInt(2, currencyId);
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                if (rs.next()) {
+                    return new CharacterCurrency(
+                        rs.getInt("currencyId"),
+                        rs.getInt("characterId"),
+                        rs.getInt("amount"),
+                        rs.getBoolean("isActive")
+                    );
+                }
+            }
+        }
+        return null;
+    }
 }
+

@@ -3,44 +3,43 @@ package cs5200project.model;
 import java.util.Objects;
 
 public class CharacterStats {
-    private int characterID;
-    private int statID;
-    private int charValue;
+    private GameCharacter character;
+    private StatType statType;
+    private int value;
 
-    public CharacterStats(int characterID, int statID, int charValue) {
-        this.characterID = characterID;
-        this.statID = statID;
-        this.charValue = charValue;
-    }
-
-    // Getters and Setters
-    public int getCharacterID() { 
-        return characterID; 
-    }
-    
-    public void setCharacterID(int characterID) { 
-        this.characterID = characterID; 
+    public CharacterStats(GameCharacter character, StatType statType, int value) {
+        this.character = character;
+        this.statType = statType;
+        this.value = value;
     }
 
-    public int getStatID() { 
-        return statID; 
-    }
-    
-    public void setStatID(int statID) { 
-        this.statID = statID; 
+    public GameCharacter getCharacter() {
+        return character;
     }
 
-    public int getCharValue() { 
-        return charValue; 
+    public void setCharacter(GameCharacter character) {
+        this.character = character;
     }
-    
-    public void setCharValue(int charValue) { 
-        this.charValue = charValue; 
+
+    public StatType getStatType() {
+        return statType;
     }
-    
+
+    public void setStatType(StatType statType) {
+        this.statType = statType;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(characterID, statID, charValue);
+        return Objects.hash(character, statType, value);
     }
     
     @Override
@@ -53,15 +52,15 @@ public class CharacterStats {
             return false;
             
         CharacterStats other = (CharacterStats) obj;
-        return characterID == other.characterID 
-                && statID == other.statID
-                && charValue == other.charValue;
+        return character.equals(other.character) 
+                && statType.equals(other.statType)
+                && value == other.value;
     }
     
     @Override
     public String toString() {
         return String.format(
-                "CharacterStats(characterID=%d, statID=%d, charValue=%d)",
-                characterID, statID, charValue);
+                "CharacterStats(character=%s, statType=%s, value=%d)",
+                character, statType, value);
     }
 }

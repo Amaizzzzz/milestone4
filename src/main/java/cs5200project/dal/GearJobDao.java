@@ -12,105 +12,79 @@ import cs5200project.model.GearJob;
 import cs5200project.model.Job;
 
 public class GearJobDao {
-    private GearJobDao() {
+    private static GearJobDao instance = null;
+    private final GearDao gearDao;
+    private final JobDao jobDao;
+    
+    protected GearJobDao() {
+        gearDao = GearDao.getInstance();
+        jobDao = JobDao.getInstance();
+    }
+    
+    public static GearJobDao getInstance() {
+        if(instance == null) {
+            instance = new GearJobDao();
+        }
+        return instance;
     }
 
-    public static GearJob create(Connection cxn, Gear gearItem, Job job) throws SQLException {
-        return create(cxn, gearItem.getItemId(), job.getJobID());
-    }
-
-    public static GearJob create(Connection cxn, int itemID, int jobID) throws SQLException {
-        final String insertGearJob = """
-            INSERT INTO GearJob(itemID, jobID)
-            VALUES (?, ?);
-        """;
-
-        try (PreparedStatement insertStmt = cxn.prepareStatement(insertGearJob)) {
-            insertStmt.setInt(1, itemID);
-            insertStmt.setInt(2, jobID);
-            insertStmt.executeUpdate();
-
-            Gear gear = GearDao.getGearByItemID(cxn, itemID);
-            Job job = JobDao.getJobById(cxn, jobID);
+    public GearJob create(Connection cxn, int itemID, int jobID) throws SQLException {
+        String insertGearJob = "INSERT INTO GearJob(itemID, jobID) VALUES(?,?)";
+        try (PreparedStatement stmt = cxn.prepareStatement(insertGearJob)) {
+            stmt.setInt(1, itemID);
+            stmt.setInt(2, jobID);
+            stmt.executeUpdate();
             
+            Gear gear = gearDao.getGearByItemID(cxn, itemID);
+            Job job = jobDao.getJobById(cxn, jobID);
             return new GearJob(gear, job);
         }
     }
 
-    public static GearJob getGearJobByItemIdAndJobId(Connection cxn, Gear gearItem, Job job) throws SQLException {
-        final String selectGearJob = """
-            SELECT *
-            FROM GearJob
-            WHERE itemID = ? AND jobID = ?;
-        """;
-        try (PreparedStatement selectStmt = cxn.prepareStatement(selectGearJob)) {
-            selectStmt.setInt(1, gearItem.getItemId());
-            selectStmt.setInt(2, job.getJobID());
-
-            try (ResultSet results = selectStmt.executeQuery()) {
-                if (results.next()) {
-					Gear gearRs = GearDao.getGearByItemID(cxn,
-							results.getInt("itemID"));
-					Job jobRs = JobDao.getJobById(cxn, job.getJobID());
-					return new GearJob(gearRs, jobRs);
-                } else {
-                    return null;
-                }
-            }
-        }
-    }
-
-    public static List<GearJob> getGearJobsByItemId(Connection cxn, Gear gearItem) throws SQLException {
-        final String selectGearJob = """
-            SELECT *
-            FROM GearJob
-            WHERE itemID = ?;
-        """;
-        List<GearJob> gearJobList = new ArrayList<>();
-        try (PreparedStatement selectStmt = cxn.prepareStatement(selectGearJob)) {
-			selectStmt.setInt(1, gearItem.getItemId());
-            try (ResultSet results = selectStmt.executeQuery()) {
+    public List<GearJob> getGearJobsByGear(Connection cxn, Gear gear) throws SQLException {
+        List<GearJob> gearJobs = new ArrayList<>();
+        String selectGearJobs = "SELECT * FROM GearJob WHERE itemID=?";
+        try (PreparedStatement stmt = cxn.prepareStatement(selectGearJobs)) {
+            stmt.setInt(1, gear.getItemId());
+            try (ResultSet results = stmt.executeQuery()) {
                 while (results.next()) {
-					Gear gear = GearDao.getGearByItemID(cxn,
-							results.getInt("itemID"));
-                    Job job = JobDao.getJobById(cxn, results.getInt("jobID"));
-                    gearJobList.add(new GearJob(gear, job));
+                    Gear gearRs = gearDao.getGearByItemID(cxn, gear.getItemId());
+                    Job jobRs = jobDao.getJobById(cxn, results.getInt("jobID"));
+                    gearJobs.add(new GearJob(gearRs, jobRs));
                 }
-                return gearJobList;
             }
         }
+        return gearJobs;
     }
 
-    public static List<GearJob> getGearJobsByJobId(Connection cxn, int jobId) throws SQLException {
-        final String selectGearJob = """
-            SELECT *
-            FROM GearJob
-            WHERE jobID = ?;
-        """;
-        List<GearJob> gearJobList = new ArrayList<>();
-        try (PreparedStatement selectStmt = cxn.prepareStatement(selectGearJob)) {
-            selectStmt.setInt(1, jobId);
-            try (ResultSet results = selectStmt.executeQuery()) {
+    public List<GearJob> getGearJobsByJob(Connection cxn, Job job) throws SQLException {
+        List<GearJob> gearJobs = new ArrayList<>();
+        String selectGearJobs = "SELECT * FROM GearJob WHERE jobID=?";
+        try (PreparedStatement stmt = cxn.prepareStatement(selectGearJobs)) {
+            stmt.setInt(1, job.getJobID());
+            try (ResultSet results = stmt.executeQuery()) {
                 while (results.next()) {
-					Gear gear = GearDao.getGearByItemID(cxn,
-							results.getInt("itemID"));
-                    Job job = JobDao.getJobById(cxn, results.getInt("jobID"));
-                    gearJobList.add(new GearJob(gear, job));
+                    Gear gear = gearDao.getGearByItemID(cxn, results.getInt("itemID"));
+                    Job jobRs = jobDao.getJobById(cxn, job.getJobID());
+                    gearJobs.add(new GearJob(gear, jobRs));
                 }
-                return gearJobList;
             }
         }
+        return gearJobs;
     }
 
-    public static void delete(Connection cxn, int itemId, int jobId) throws SQLException {
-        final String delete = """
-            DELETE FROM GearJob 
-            WHERE itemID = ? AND jobID = ?;
-        """;
-        try (PreparedStatement stmt = cxn.prepareStatement(delete)) {
-			stmt.setInt(1, itemId);
-			stmt.setInt(2, jobId);
-            stmt.executeUpdate();
+    public List<GearJob> getAllGearJobs(Connection cxn) throws SQLException {
+        List<GearJob> gearJobs = new ArrayList<>();
+        String selectGearJobs = "SELECT * FROM GearJob";
+        try (PreparedStatement stmt = cxn.prepareStatement(selectGearJobs)) {
+            try (ResultSet results = stmt.executeQuery()) {
+                while (results.next()) {
+                    Gear gear = gearDao.getGearByItemID(cxn, results.getInt("itemID"));
+                    Job job = jobDao.getJobById(cxn, results.getInt("jobID"));
+                    gearJobs.add(new GearJob(gear, job));
+                }
+            }
         }
+        return gearJobs;
     }
 }

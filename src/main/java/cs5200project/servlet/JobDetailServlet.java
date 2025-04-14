@@ -1,93 +1,84 @@
 package cs5200project.servlet;
 
-import cs5200project.dal.ConnectionManager;
-import cs5200project.dal.JobDao;
-import cs5200project.dal.GameCharacterDao;
-import cs5200project.dal.GearDao;
-import cs5200project.model.Job;
-import cs5200project.model.GameCharacter;
-import cs5200project.model.Gear;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
 
-@WebServlet("/job")
+import cs5200project.dal.JobDao;
+import cs5200project.model.Job;
+import cs5200project.util.ConnectionManager;
+
+@WebServlet("/job-detail/*")
 public class JobDetailServlet extends HttpServlet {
-    
+    private final JobDao jobDao = JobDao.getInstance();
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String jobIdStr = req.getParameter("id");
-        if (jobIdStr == null || jobIdStr.trim().isEmpty()) {
-            resp.sendRedirect("jobs");
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        try (Connection connection = ConnectionManager.getConnection()) {
-            int jobId = Integer.parseInt(jobIdStr);
-            Job job = JobDao.getInstance().getJobById(connection, jobId);
-            if (job == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Job not found");
-                return;
+        try {
+            int jobId = Integer.parseInt(pathInfo.substring(1));
+            try (Connection connection = ConnectionManager.getConnection()) {
+                Job job = jobDao.getJobById(connection, jobId);
+                if (job == null) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+                request.setAttribute("job", job);
+                request.getRequestDispatcher("/job-detail.jsp").forward(request, response);
             }
-
-            List<GameCharacter> characters = GameCharacterDao.getInstance()
-                    .getCharactersByJob(connection, jobId);
-            List<Gear> availableGear = GearDao.getInstance()
-                    .getGearByJob(connection, jobId);
-
-            req.setAttribute("job", job);
-            req.setAttribute("characters", characters);
-            req.setAttribute("availableGear", availableGear);
-            req.getRequestDispatcher("/job-detail.jsp").forward(req, resp);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new ServletException("Error retrieving job details", e);
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid job ID format");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        } catch (SQLException e) {
+            throw new ServletException("Error accessing the database", e);
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = req.getParameter("action");
-        String jobIdStr = req.getParameter("id");
-
-        if (jobIdStr == null || jobIdStr.trim().isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Job ID is required");
+        String action = request.getParameter("action");
+        if (action == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        try (Connection connection = ConnectionManager.getConnection()) {
-            int jobId = Integer.parseInt(jobIdStr);
-
-            if ("delete".equals(action)) {
-                JobDao.getInstance().delete(connection, jobId);
-                resp.sendRedirect("jobs");
-            } else {
-                // Handle update
-                String jobName = req.getParameter("jobName");
-                String description = req.getParameter("description");
-                int baseHP = Integer.parseInt(req.getParameter("baseHP"));
-                int baseMP = Integer.parseInt(req.getParameter("baseMP"));
-
-                Job job = JobDao.getInstance().update(connection, jobId, jobName, 
-                        description, baseHP, baseMP);
-                resp.sendRedirect("job?id=" + job.getJobID());
+        try {
+            int jobId = Integer.parseInt(request.getParameter("jobId"));
+            try (Connection connection = ConnectionManager.getConnection()) {
+                if ("delete".equals(action)) {
+                    Job job = jobDao.getJobById(connection, jobId);
+                    if (job != null) {
+                        jobDao.delete(connection, job);
+                    }
+                    response.sendRedirect(request.getContextPath() + "/jobs");
+                } else if ("update".equals(action)) {
+                    String jobName = request.getParameter("jobName");
+                    String description = request.getParameter("description");
+                    int minLevel = Integer.parseInt(request.getParameter("minLevel"));
+                    int maxLevel = Integer.parseInt(request.getParameter("maxLevel"));
+                    
+                    jobDao.update(connection, jobId, jobName, description, minLevel, maxLevel);
+                    response.sendRedirect(request.getContextPath() + "/job-detail/" + jobId);
+                } else {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new ServletException("Error updating job", e);
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid number format");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        } catch (SQLException e) {
+            throw new ServletException("Error accessing the database", e);
         }
     }
 } 

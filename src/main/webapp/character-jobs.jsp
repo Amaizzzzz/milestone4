@@ -4,132 +4,103 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Character Jobs</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .progress {
-            height: 25px;
-        }
-        .progress-bar {
-            line-height: 25px;
-        }
-    </style>
+    <title>${character.firstName} ${character.lastName} - Jobs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1 class="mt-4">${character.firstName} ${character.lastName}'s Jobs</h1>
+    <div class="container mt-4">
+        <h2>Jobs for ${character.firstName} ${character.lastName}</h2>
         
-        <!-- Filter Section -->
-        <div class="filter-section mb-4">
-            <form action="character-jobs" method="get" class="form-inline">
-                <input type="hidden" name="characterId" value="${param.characterId}">
-                <div class="form-group mr-3">
-                    <label for="jobName" class="mr-2">Job Name:</label>
-                    <input type="text" class="form-control" id="jobName" name="jobName" 
-                           value="${param.jobName}" placeholder="Search job name">
+        <!-- Filtering Form -->
+        <form method="get" action="character-jobs" class="mb-4">
+            <input type="hidden" name="characterId" value="${character.characterId}">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="text" name="jobNameFilter" class="form-control" placeholder="Job Name" 
+                           value="${param.jobNameFilter}">
                 </div>
-                <div class="form-group mr-3">
-                    <label for="minXP" class="mr-2">Min XP:</label>
-                    <input type="number" class="form-control" id="minXP" name="minXP" 
-                           value="${param.minXP}" placeholder="Min XP">
+                <div class="col-md-3">
+                    <input type="number" name="minXp" class="form-control" placeholder="Min XP" 
+                           value="${param.minXp}">
                 </div>
-                <div class="form-group mr-3">
-                    <label for="maxXP" class="mr-2">Max XP:</label>
-                    <input type="number" class="form-control" id="maxXP" name="maxXP" 
-                           value="${param.maxXP}" placeholder="Max XP">
+                <div class="col-md-3">
+                    <input type="number" name="maxXp" class="form-control" placeholder="Max XP" 
+                           value="${param.maxXp}">
                 </div>
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
-            </form>
-        </div>
-
-        <!-- Jobs List -->
-        <div class="card">
-            <div class="card-header">
-                <h5>Job Progression</h5>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Job Name</th>
-                            <th>Level</th>
-                            <th>XP Progress</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach items="${characterJobs}" var="job">
-                            <tr>
-                                <td>${job.jobName}</td>
-                                <td>${job.level}</td>
-                                <td>
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" 
-                                             style="width: ${job.xpPercentage}%">
-                                            ${job.xp}/${job.nextLevelXP} XP
+        </form>
+
+        <!-- Jobs Table -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Job Name</th>
+                    <th>Current XP</th>
+                    <th>Level</th>
+                    <th>Current Job</th>
+                    <th>Weapon</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${characterJobs}" var="job">
+                    <tr>
+                        <td>${job.jobName}</td>
+                        <td>${job.xp}</td>
+                        <td>${job.level}</td>
+                        <td>${job.isCurrentJob ? 'Yes' : 'No'}</td>
+                        <td>${job.weaponName}</td>
+                        <td>
+                            <button type="button" class="btn btn-warning btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#updateXpModal${job.jobId}">
+                                Update XP
+                            </button>
+                            <c:if test="${!job.isCurrentJob}">
+                                <form action="character-jobs/set-current" method="post" style="display: inline;">
+                                    <input type="hidden" name="characterId" value="${character.characterId}">
+                                    <input type="hidden" name="jobId" value="${job.jobId}">
+                                    <button type="submit" class="btn btn-success btn-sm">Set as Current</button>
+                                </form>
+                            </c:if>
+                        </td>
+                    </tr>
+                    
+                    <!-- Update XP Modal -->
+                    <div class="modal fade" id="updateXpModal${job.jobId}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Update XP for ${job.jobName}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="character-jobs/update-xp" method="post">
+                                    <div class="modal-body">
+                                        <input type="hidden" name="characterId" value="${character.characterId}">
+                                        <input type="hidden" name="jobId" value="${job.jobId}">
+                                        <div class="mb-3">
+                                            <label for="xp${job.jobId}" class="form-label">XP Amount</label>
+                                            <input type="number" class="form-control" id="xp${job.jobId}" 
+                                                   name="xp" value="${job.xp}" required>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-${job.isUnlocked ? 'success' : 'secondary'}">
-                                        ${job.isUnlocked ? 'Unlocked' : 'Locked'}
-                                    </span>
-                                    <c:if test="${job.isCurrentJob}">
-                                        <span class="badge badge-primary">Current Job</span>
-                                    </c:if>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-warning btn-sm" 
-                                                onclick="updateXP(${job.jobID}, ${job.xp})">
-                                            Update XP
-                                        </button>
-                                        <c:if test="${!job.isUnlocked}">
-                                            <button type="button" class="btn btn-success btn-sm" 
-                                                    onclick="unlockJob(${job.jobID})">
-                                                Unlock
-                                            </button>
-                                        </c:if>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save changes</button>
                                     </div>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </c:forEach>
+            </tbody>
+        </table>
         
-        <a href="characters" class="btn btn-secondary mt-3">Back to Characters</a>
+        <a href="characters" class="btn btn-secondary">Back to Characters</a>
     </div>
-
-    <script>
-    function updateXP(jobId, currentXP) {
-        const newXP = prompt("Enter new XP value:", currentXP);
-        if (newXP !== null) {
-            window.location.href = `character-jobs?action=updateXP&characterId=${${param.characterId}}&jobId=${jobId}&xp=${newXP}`;
-        }
-    }
-    
-    function unlockJob(jobId) {
-        if (confirm("Are you sure you want to unlock this job?")) {
-            window.location.href = `character-jobs?action=unlock&characterId=${${param.characterId}}&jobId=${jobId}`;
-        }
-    }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 

@@ -20,21 +20,84 @@
         <url-pattern>/</url-pattern>
     </servlet-mapping>
 
+    <!-- Character Servlets -->
     <servlet>
-        <servlet-name>CharacterServlet</servlet-name>
-        <servlet-class>cs5200project.servlets.CharacterServlet</servlet-class>
+        <servlet-name>CharacterCurrencyServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.CharacterCurrencyServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>CharacterServlet</servlet-name>
-        <url-pattern>/characters</url-pattern>
+        <servlet-name>CharacterCurrencyServlet</servlet-name>
+        <url-pattern>/character-currency</url-pattern>
     </servlet-mapping>
 
+    <!-- Weapon Servlets -->
     <servlet>
-        <servlet-name>CharacterJsp</servlet-name>
-        <jsp-file>/character.jsp</jsp-file>
+        <servlet-name>WeaponDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.WeaponDetailServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>CharacterJsp</servlet-name>
-        <url-pattern>/character.jsp</url-pattern>
+        <servlet-name>WeaponDetailServlet</servlet-name>
+        <url-pattern>/weapon-detail</url-pattern>
     </servlet-mapping>
+
+    <!-- Consumable Servlets -->
+    <servlet>
+        <servlet-name>ConsumableDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.ConsumableDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ConsumableDetailServlet</servlet-name>
+        <url-pattern>/consumable-detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- Race Servlets -->
+    <servlet>
+        <servlet-name>RaceDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.RaceDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RaceDetailServlet</servlet-name>
+        <url-pattern>/race-detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- Job Servlets -->
+    <servlet>
+        <servlet-name>JobDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.JobDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>JobDetailServlet</servlet-name>
+        <url-pattern>/job-detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- Inventory Servlets -->
+    <servlet>
+        <servlet-name>InventorySlotDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.InventorySlotDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InventorySlotDetailServlet</servlet-name>
+        <url-pattern>/inventory-slot-detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- Character Detail Servlets -->
+    <servlet>
+        <servlet-name>CharacterDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.CharacterDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CharacterDetailServlet</servlet-name>
+        <url-pattern>/character-detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- Gear Instance Servlets -->
+    <servlet>
+        <servlet-name>GearInstanceDetailServlet</servlet-name>
+        <servlet-class>cs5200project.servlet.GearInstanceDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>GearInstanceDetailServlet</servlet-name>
+        <url-pattern>/gear-instance-detail</url-pattern>
+    </servlet-mapping>
+
 </web-app> 

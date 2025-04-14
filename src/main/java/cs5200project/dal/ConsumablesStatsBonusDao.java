@@ -12,17 +12,23 @@ import cs5200project.model.Consumable;
 import cs5200project.model.Statistic;
 
 public class ConsumablesStatsBonusDao {
+  private static ConsumablesStatsBonusDao instance = null;
 
-  private ConsumablesStatsBonusDao() {
+  protected ConsumablesStatsBonusDao() {
     // Prevent instantiation
   }
 
-  public static ConsumablesStatsBonus create(Connection cxn, Consumable item,
+  public static ConsumablesStatsBonusDao getInstance() {
+    if(instance == null) {
+      instance = new ConsumablesStatsBonusDao();
+    }
+    return instance;
+  }
+
+  public ConsumablesStatsBonus create(Connection cxn, Consumable item,
       Statistic stats, float percentageBonus, int bonusCap) throws SQLException {
-    String insertBonus = """
-                INSERT INTO ConsumablesStatsBonus (itemID, statID, percentageBonus, bonusCap)
-                VALUES (?, ?, ?, ?);
-                """;
+    String insertBonus = "INSERT INTO ConsumablesStatsBonus (itemID, statID, percentageBonus, bonusCap) " +
+                        "VALUES (?, ?, ?, ?);";
     try (PreparedStatement insertStmt = cxn.prepareStatement(insertBonus)) {
       insertStmt.setInt(1, item.getItemId());
       insertStmt.setInt(2, stats.getStatisticID());
@@ -34,11 +40,9 @@ public class ConsumablesStatsBonusDao {
     }
   }
 
-  public static ConsumablesStatsBonus getByItemIdAndStatId(Connection cxn, Consumable item, Statistic stats) throws SQLException {
-    String selectBonus = """
-                SELECT * FROM ConsumablesStatsBonus
-                WHERE itemID = ? AND statID = ?;
-                """;
+  public ConsumablesStatsBonus getByItemIdAndStatId(Connection cxn, Consumable item, Statistic stats) throws SQLException {
+    String selectBonus = "SELECT * FROM ConsumablesStatsBonus " +
+                        "WHERE itemID = ? AND statID = ?;";
     try (PreparedStatement selectStmt = cxn.prepareStatement(selectBonus)) {
       selectStmt.setInt(1, item.getItemId());
       selectStmt.setInt(2, stats.getStatisticID());
@@ -55,18 +59,20 @@ public class ConsumablesStatsBonusDao {
     }
   }
 
-  public static List<ConsumablesStatsBonus> getByBonusCap(Connection cxn, int bonusCap) throws SQLException {
+  public List<ConsumablesStatsBonus> getByBonusCap(Connection cxn, int bonusCap) throws SQLException {
     String selectBonus = "SELECT * FROM ConsumablesStatsBonus WHERE bonusCap = ?;";
     List<ConsumablesStatsBonus> bonusList = new ArrayList<>();
+    ConsumableDao consumableDao = ConsumableDao.getInstance();
+    StatisticDao statisticDao = StatisticDao.getInstance();
 
     try (PreparedStatement stmt = cxn.prepareStatement(selectBonus)) {
       stmt.setInt(1, bonusCap);
       try (ResultSet results = stmt.executeQuery()) {
         while (results.next()) {
           int itemId = results.getInt("itemID");
-          Consumable item = ConsumableDao.getByConsumablesId(cxn, itemId);
+          Consumable item = consumableDao.getByConsumablesId(cxn, itemId);
           int statId = results.getInt("statID");
-          Statistic stats = StatisticDao.getStatisticByID(cxn, statId);
+          Statistic stats = statisticDao.getStatisticByID(cxn, statId);
           float percentageBonus = results.getFloat("percentageBonus");
           bonusList.add(new ConsumablesStatsBonus(item, stats, percentageBonus, bonusCap));
         }
