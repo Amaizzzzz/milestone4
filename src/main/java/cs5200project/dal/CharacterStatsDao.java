@@ -1,47 +1,70 @@
 package cs5200project.dal;
 
-import cs5200project.model.CharacterStats;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 import cs5200project.model.Character;
+import cs5200project.model.CharacterStats;
 import cs5200project.model.Statistic;
-import java.sql.*;
-import java.util.*;
+import cs5200project.model.StatType;
+import cs5200project.util.ConnectionManager;
 
 public class CharacterStatsDao {
-    // Dao classes should not be instantiated.
-    // Pass Connection object as parameter in each method
-    // Each method should be static
-    private CharacterStatsDao() {
-        // Private constructor to prevent instantiation
+    private static CharacterStatsDao instance = null;
+
+    protected CharacterStatsDao() {
     }
 
-    public static CharacterStats create(Connection connection, Character character, Statistic stat, int charValue) throws SQLException {
-        String insertQuery = "INSERT INTO `CharacterStats` (characterID, statID, value) VALUES (?, ?, ?)";
-        
-        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
-            statement.setInt(1, character.getCharacterID());
-            statement.setInt(2, stat.getStatisticID());
-            statement.setInt(3, charValue);
-            
-            statement.executeUpdate();
+    public static CharacterStatsDao getInstance() {
+        if (instance == null) {
+            instance = new CharacterStatsDao();
         }
-        return new CharacterStats(character.getCharacterID(), stat.getStatisticID(), charValue);
+        return instance;
     }
 
-    public static List<CharacterStats> getStatsByCharacterId(Connection cxn, int characterID) throws SQLException {
-        List<CharacterStats> stats = new ArrayList<>();
-        String query = "SELECT * FROM `CharacterStats` WHERE characterID = ?";
-        try (PreparedStatement stmt = cxn.prepareStatement(query)) {
-            stmt.setInt(1, characterID);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    stats.add(new CharacterStats(
-                        rs.getInt("characterID"),
-                        rs.getInt("statID"),
-                        rs.getInt("value")
-                    ));
+    public static CharacterStats create(Connection connection, Character character, Statistic statistic, int value) throws SQLException {
+        String insertCharacterStats = "INSERT INTO CharacterStats(characterID, statID, value) VALUES(?,?,?)";
+        try (PreparedStatement statement = connection.prepareStatement(insertCharacterStats)) {
+            statement.setInt(1, character.getCharacterID());
+            statement.setInt(2, statistic.getStatisticID());
+            statement.setInt(3, value);
+            statement.executeUpdate();
+            return new CharacterStats(character.getCharacterID(), statistic.getStatisticID(), value);
+        }
+    }
+
+    public static CharacterStats getCharacterStats(Connection connection, int characterId, int statId) throws SQLException {
+        String selectCharacterStats = "SELECT * FROM CharacterStats WHERE characterID = ? AND statID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(selectCharacterStats)) {
+            statement.setInt(1, characterId);
+            statement.setInt(2, statId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    StatType statType = StatTypeDao.getStatTypeByID(connection, statId);
+                    return new CharacterStats(characterId, statType, resultSet.getInt("value"));
+                }
+                return null;
+            }
+        }
+    }
+
+    public static List<CharacterStats> getCharacterStatsByCharacterId(Connection connection, int characterId) throws SQLException {
+        List<CharacterStats> characterStats = new ArrayList<>();
+        String selectCharacterStats = "SELECT * FROM CharacterStats WHERE characterID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(selectCharacterStats)) {
+            statement.setInt(1, characterId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    int statId = resultSet.getInt("statID");
+                    StatType statType = StatTypeDao.getStatTypeByID(connection, statId);
+                    characterStats.add(new CharacterStats(characterId, statType, resultSet.getInt("value")));
                 }
             }
         }
-        return stats;
+        return characterStats;
     }
 }

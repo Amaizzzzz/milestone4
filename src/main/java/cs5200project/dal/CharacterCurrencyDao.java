@@ -21,10 +21,8 @@ public class CharacterCurrencyDao {
     
     // Add an overloaded method that takes IDs directly
     public static CharacterCurrency create(Connection cxn, int characterID, int currencyID, int currentAmount, boolean isCurrent) throws SQLException {
-        final String insertCharacterCurrency = """
-            INSERT INTO `CharacterCurrency`(characterID, currencyID, currentAmount, isCurrent)
-            VALUES (?, ?, ?, ?)
-            """;
+        final String insertCharacterCurrency = "INSERT INTO `CharacterCurrency`(characterID, currencyID, currentAmount, isCurrent) " +
+                "VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement insertStmt = cxn.prepareStatement(insertCharacterCurrency)) {
             insertStmt.setInt(1, characterID);
@@ -53,5 +51,18 @@ public class CharacterCurrencyDao {
             }
         }
         return currencies;
+    }
+
+    public CharacterCurrency create(Connection connection, Character character, int currencyAmount)
+            throws SQLException {
+        final String insertCharacterCurrency = "INSERT INTO CharacterCurrency(characterID, currencyAmount) " +
+                "VALUES(?,?)";
+        try (PreparedStatement statement = connection.prepareStatement(insertCharacterCurrency,
+                Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, character.getCharacterID());
+            statement.setInt(2, currencyAmount);
+            statement.executeUpdate();
+            return new CharacterCurrency(character.getCharacterID(), 1, currencyAmount, true);
+        }
     }
 }

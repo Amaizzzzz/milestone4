@@ -4,12 +4,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
 
 import cs5200project.model.GearSlot;
 import cs5200project.model.Job;
 import cs5200project.model.Weapon;
 import cs5200project.model.Weapon.RankValue;
 import cs5200project.model.Weapon.WeaponDurability;
+import cs5200project.model.WeaponType;
 
 public class WeaponDao {
 
@@ -32,22 +35,15 @@ public class WeaponDao {
 		}
 
 		// Insert into Weapon table
-		final String insertWeapon = """
-			INSERT INTO `Weapon` (itemID, requiredLevel, damage, attackSpeed, weaponType, gearSlotID, jobID, weaponDurability, rankValue)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-			""";
-			
-		try (PreparedStatement stmt = cxn.prepareStatement(insertWeapon)) {
-			stmt.setInt(1, itemID);
-			stmt.setInt(2, requiredLevel);
-			stmt.setInt(3, damage);
-			stmt.setInt(4, attackSpeed);
-			stmt.setString(5, weaponType);
-			stmt.setInt(6, gearSlot.getSlotID());
-			stmt.setInt(7, requiredJob.getJobID());
-			stmt.setString(8, weaponDurability.name());
-			stmt.setString(9, rankValue.name());
-			stmt.executeUpdate();
+		final String insertWeapon = "INSERT INTO Weapon(itemID, weaponTypeID, damage, durability) " +
+				"VALUES(?,?,?,?)";
+		try (PreparedStatement statement = cxn.prepareStatement(insertWeapon,
+				Statement.RETURN_GENERATED_KEYS)) {
+			statement.setInt(1, itemID);
+			statement.setInt(2, weaponType.hashCode());
+			statement.setInt(3, damage);
+			statement.setString(4, weaponDurability.name());
+			statement.executeUpdate();
 		}
 
 		// Return a new Weapon object with the generated itemID
@@ -59,14 +55,12 @@ public class WeaponDao {
 
 	public static Weapon getWeaponById(Connection cxn, int itemID)
 			throws SQLException {
-		String query = """
-				SELECT i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity,
-				       w.requiredLevel, w.damage, w.attackSpeed, w.weaponType, 
-				       w.gearSlotID, w.jobID, w.weaponDurability, w.rankValue
-				FROM `Weapon` w
-				JOIN `Item` i ON w.itemID = i.itemID
-				WHERE w.itemID = ?
-				""";
+		String query = "SELECT i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity, " +
+				"w.requiredLevel, w.damage, w.attackSpeed, w.weaponType, " +
+				"w.gearSlotID, w.jobID, w.weaponDurability, w.rankValue " +
+				"FROM `Weapon` w " +
+				"JOIN `Item` i ON w.itemID = i.itemID " +
+				"WHERE w.itemID = ?";
 
 		try (PreparedStatement stmt = cxn.prepareStatement(query)) {
 			stmt.setInt(1, itemID);
@@ -97,7 +91,22 @@ public class WeaponDao {
 							requiredJobName, weaponDurability, rankValue);
 				}
 			}
-        }
+		}
 		return null;
+	}
+
+    public List<Weapon> getWeaponsByType(Connection connection, WeaponType type) throws SQLException {
+        String query = "SELECT w.itemID, w.weaponTypeID, w.damage, w.durability, " +
+                "i.name, i.description, i.source " +
+                "FROM Weapon w " +
+                "JOIN Item i ON w.itemID = i.itemID " +
+                "WHERE w.weaponTypeID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, type.hashCode());
+            try (ResultSet rs = statement.executeQuery()) {
+                // Implementation of getWeaponsByType method
+            }
+        }
+        return null; // Placeholder return, actual implementation needed
     }
 }

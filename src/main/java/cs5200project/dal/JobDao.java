@@ -13,10 +13,8 @@ public class JobDao {
     }
 
     public static Job create(Connection cxn, String jobName) throws SQLException {
-        final String insertJob = """
-            INSERT INTO Job(jobName)
-            VALUES (?);
-        """;
+        final String insertJob = "INSERT INTO Job(jobName) " +
+                "VALUES (?);";
 
         try (PreparedStatement insertStmt = cxn.prepareStatement(insertJob,
                 Statement.RETURN_GENERATED_KEYS)) {
@@ -29,10 +27,8 @@ public class JobDao {
 
 	public static Job getJobById(Connection cxn, int jobId)
 			throws SQLException {
-        final String selectJob = """
-            SELECT * FROM Job 
-              WHERE jobID = ?;
-        """;
+        final String selectJob = "SELECT * FROM Job " +
+                "WHERE jobID = ?;";
         try (PreparedStatement selectStmt = cxn.prepareStatement(selectJob)) {
 			selectStmt.setInt(1, jobId);
             try (ResultSet results = selectStmt.executeQuery()) {
@@ -47,10 +43,8 @@ public class JobDao {
     }
 
     public static void delete(Connection cxn, Job job) throws SQLException {
-        final String delete = """
-            DELETE FROM Job 
-            WHERE jobID = ?;
-        """;
+        final String delete = "DELETE FROM Job " +
+                "WHERE jobID = ?;";
         try (PreparedStatement stmt = cxn.prepareStatement(delete)) {
             stmt.setInt(1, job.getJobID());
             stmt.executeUpdate();   

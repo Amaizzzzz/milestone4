@@ -1,10 +1,10 @@
-
 package cs5200project.dal;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +19,10 @@ public class InventorySlotDao {
 	public static InventorySlot create(Connection cxn, Character character,
 			int slotNumber, Item item, int quantityStacked)
 			throws SQLException {
-		String insertInventorySlot = """
-				INSERT INTO InventorySlot (characterID, slotNumber, itemID, quantityStacked)
-				VALUES (?, ?, ?, ?);""";
-		try (PreparedStatement insertStmt = cxn
-				.prepareStatement(insertInventorySlot)) {
+		String insertInventorySlot = "INSERT INTO InventorySlot(characterID, slotNumber, itemID, quantityStacked) " +
+				"VALUES(?,?,?,?)";
+		try (PreparedStatement insertStmt = cxn.prepareStatement(insertInventorySlot,
+				Statement.RETURN_GENERATED_KEYS)) {
 			insertStmt.setInt(1, character.getCharacterID());
 			insertStmt.setInt(2, slotNumber);
 			insertStmt.setInt(3, item.getItemId());
@@ -37,10 +36,11 @@ public class InventorySlotDao {
 	public static InventorySlot getInventorySlotByCharacterIdAndSlotNumber(
 			Connection cxn, Character character, int slotNumber)
 			throws SQLException {
-		String selectSlot = """
-				SELECT * FROM InventorySlot
-					WHERE characterID = ? AND slotNumber = ?;
-				""";
+		String selectSlot = "SELECT is.characterID, is.slotNumber, is.itemID, " +
+				"i.name, i.description, i.source " +
+				"FROM InventorySlot is " +
+				"JOIN Item i ON is.itemID = i.itemID " +
+				"WHERE is.characterID = ? AND is.slotNumber = ?";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectSlot)) {
 			selectStmt.setInt(1, character.getCharacterID());
 			selectStmt.setInt(2, slotNumber);

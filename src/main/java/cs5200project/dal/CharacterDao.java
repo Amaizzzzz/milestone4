@@ -44,15 +44,13 @@ public class CharacterDao {
 
 	// Get character by ID, including full Player, Race, Job
     public static Character getCharacterById(Connection cxn, int id) throws SQLException {
-		String query = """
-				    SELECT c.*, p.username, p.email, p.serverRegion,
-				           r.raceName, j.jobName
-				    FROM `Character` c
-				    JOIN Player p ON c.playerID = p.playerID
-				    JOIN Race r ON c.raceID = r.raceID
-				    JOIN Job j ON c.currentJobID = j.jobID
-				    WHERE c.characterID = ?
-				""";
+		String query = "SELECT c.*, p.username, p.email, p.serverRegion, " +
+				"r.raceName, j.jobName " +
+				"FROM `Character` c " +
+				"JOIN Player p ON c.playerID = p.playerID " +
+				"JOIN Race r ON c.raceID = r.raceID " +
+				"JOIN Job j ON c.currentJobID = j.jobID " +
+				"WHERE c.characterID = ?";
 
         try (PreparedStatement stmt = cxn.prepareStatement(query)) {
             stmt.setInt(1, id);
@@ -86,15 +84,13 @@ public class CharacterDao {
 			String lastName, String sortField) throws SQLException {
 		List<Character> characters = new ArrayList<>();
 
-		String baseQuery = """
-				    SELECT c.*, p.username, p.email, p.serverRegion,
-				           r.raceName, j.jobName
-				    FROM `Character` c
-				    JOIN Player p ON c.playerID = p.playerID
-				    JOIN Race r ON c.raceID = r.raceID
-				    JOIN Job j ON c.currentJobID = j.jobID
-				    WHERE c.lastName LIKE ?
-				""";
+		String baseQuery = "SELECT c.*, p.username, p.email, p.serverRegion, " +
+				"r.raceName, j.jobName " +
+				"FROM `Character` c " +
+				"JOIN Player p ON c.playerID = p.playerID " +
+				"JOIN Race r ON c.raceID = r.raceID " +
+				"JOIN Job j ON c.currentJobID = j.jobID " +
+				"WHERE c.lastName LIKE ?";
 		String orderBy = "ORDER BY c.characterID"; // default
 		if ("name".equalsIgnoreCase(sortField)) {
 			orderBy = "ORDER BY c.firstName, c.lastName";
@@ -130,15 +126,13 @@ public class CharacterDao {
 			String raceName, String sortField) throws SQLException {
 		List<Character> characters = new ArrayList<>();
 
-		String baseQuery = """
-				    SELECT c.*, p.username, p.email, p.serverRegion,
-				           r.raceName, j.jobName
-				    FROM `Character` c
-				    JOIN Player p ON c.playerID = p.playerID
-				    JOIN Race r ON c.raceID = r.raceID
-				    JOIN Job j ON c.currentJobID = j.jobID
-				    WHERE r.raceName LIKE ?
-				""";
+		String baseQuery = "SELECT c.*, p.username, p.email, p.serverRegion, " +
+				"r.raceName, j.jobName " +
+				"FROM `Character` c " +
+				"JOIN Player p ON c.playerID = p.playerID " +
+				"JOIN Race r ON c.raceID = r.raceID " +
+				"JOIN Job j ON c.currentJobID = j.jobID " +
+				"WHERE r.raceName LIKE ?";
 
 		String orderBy = "ORDER BY c.characterID"; // default
 		if ("name".equalsIgnoreCase(sortField)) {
@@ -193,6 +187,96 @@ public class CharacterDao {
 			stmt.setString(2, lastName);
 			stmt.setInt(3, characterId);
 			stmt.executeUpdate();
+		}
+	}
+
+	public List<Character> getCharactersByPlayerId(Connection connection, int playerId) throws SQLException {
+		String query = "SELECT c.characterID, c.playerID, c.firstName, c.lastName, " +
+				"c.raceID, c.creationDate, c.isNewPlayer, c.currentJobID " +
+				"FROM GameCharacter c " +
+				"WHERE c.playerID = ? " +
+				"ORDER BY c.characterID";
+		try (PreparedStatement statement = connection.prepareStatement(query)) {
+			statement.setInt(1, playerId);
+			try (ResultSet rs = statement.executeQuery()) {
+				List<Character> characters = new ArrayList<>();
+				while (rs.next()) {
+					Player player = new Player(rs.getInt("playerID"),
+							rs.getString("username"), rs.getString("email"),
+							rs.getString("serverRegion"));
+					Race race = new Race(rs.getInt("raceID"),
+							rs.getString("raceName"));
+					Job job = new Job(rs.getInt("currentJobID"),
+							rs.getString("jobName"));
+					Character character = new Character(
+							rs.getInt("characterID"), player,
+							rs.getString("firstName"), rs.getString("lastName"),
+							race, rs.getTimestamp("creationTime"),
+							rs.getBoolean("isNewPlayer"), job);
+					characters.add(character);
+				}
+				return characters;
+			}
+		}
+	}
+
+	public List<Character> getCharactersByRaceId(Connection connection, int raceId) throws SQLException {
+		String baseQuery = "SELECT c.characterID, c.playerID, c.firstName, c.lastName, " +
+				"c.raceID, c.creationDate, c.isNewPlayer, c.currentJobID " +
+				"FROM GameCharacter c " +
+				"WHERE c.raceID = ? " +
+				"ORDER BY c.characterID";
+		try (PreparedStatement statement = connection.prepareStatement(baseQuery)) {
+			statement.setInt(1, raceId);
+			try (ResultSet rs = statement.executeQuery()) {
+				List<Character> characters = new ArrayList<>();
+				while (rs.next()) {
+					Player player = new Player(rs.getInt("playerID"),
+							rs.getString("username"), rs.getString("email"),
+							rs.getString("serverRegion"));
+					Race race = new Race(rs.getInt("raceID"),
+							rs.getString("raceName"));
+					Job job = new Job(rs.getInt("currentJobID"),
+							rs.getString("jobName"));
+					Character character = new Character(
+							rs.getInt("characterID"), player,
+							rs.getString("firstName"), rs.getString("lastName"),
+							race, rs.getTimestamp("creationTime"),
+							rs.getBoolean("isNewPlayer"), job);
+					characters.add(character);
+				}
+				return characters;
+			}
+		}
+	}
+
+	public List<Character> getCharactersByCurrentJobId(Connection connection, int jobId) throws SQLException {
+		String baseQuery = "SELECT c.characterID, c.playerID, c.firstName, c.lastName, " +
+				"c.raceID, c.creationDate, c.isNewPlayer, c.currentJobID " +
+				"FROM GameCharacter c " +
+				"WHERE c.currentJobID = ? " +
+				"ORDER BY c.characterID";
+		try (PreparedStatement statement = connection.prepareStatement(baseQuery)) {
+			statement.setInt(1, jobId);
+			try (ResultSet rs = statement.executeQuery()) {
+				List<Character> characters = new ArrayList<>();
+				while (rs.next()) {
+					Player player = new Player(rs.getInt("playerID"),
+							rs.getString("username"), rs.getString("email"),
+							rs.getString("serverRegion"));
+					Race race = new Race(rs.getInt("raceID"),
+							rs.getString("raceName"));
+					Job job = new Job(rs.getInt("currentJobID"),
+							rs.getString("jobName"));
+					Character character = new Character(
+							rs.getInt("characterID"), player,
+							rs.getString("firstName"), rs.getString("lastName"),
+							race, rs.getTimestamp("creationTime"),
+							rs.getBoolean("isNewPlayer"), job);
+					characters.add(character);
+				}
+				return characters;
+			}
 		}
 	}
 

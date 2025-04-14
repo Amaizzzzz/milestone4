@@ -17,9 +17,8 @@ public class WeaponStatsBonusDao {
 
   public static WeaponStatsBonus create(Connection cxn, Weapon weapon,
       Statistic stats, int bonusValue) throws SQLException {
-    String insertBonus = """
-				INSERT INTO WeaponStatsBonus (itemID, statID, bonusValue)
-				VALUES (?, ?, ?);""";
+    String insertBonus = "INSERT INTO WeaponStatsBonus (itemID, statID, bonusValue) " +
+            "VALUES (?, ?, ?)";
     try (PreparedStatement insertStmt = cxn.prepareStatement(insertBonus)) {
       insertStmt.setInt(1, weapon.getItemId());
       insertStmt.setInt(2, stats.getStatisticID());
@@ -31,10 +30,8 @@ public class WeaponStatsBonusDao {
 
   public static WeaponStatsBonus getWeaponStatsBonusByItemIdAndStatId(
       Connection cxn, Weapon weapon, Statistic stats) throws SQLException {
-    String selectBonus = """
-				SELECT * FROM WeaponStatsBonus
-					WHERE itemID = ? AND statID = ?;
-				""";
+    String selectBonus = "SELECT * FROM WeaponStatsBonus " +
+            "WHERE itemID = ? AND statID = ?";
     try (PreparedStatement selectStmt = cxn.prepareStatement(selectBonus)) {
       selectStmt.setInt(1, weapon.getItemId());
       selectStmt.setInt(2, stats.getStatisticID());

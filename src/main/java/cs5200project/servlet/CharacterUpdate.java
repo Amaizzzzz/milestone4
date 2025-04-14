@@ -1,31 +1,48 @@
 package cs5200project.servlet;
 
+import cs5200project.dal.CharacterDao;
+import cs5200project.model.Character;
+import cs5200project.util.ConnectionManager;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import cs5200project.dal.CharacterDao;
-import cs5200project.dal.ConnectionManager;
-import cs5200project.model.Character;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/characterupdate")
 public class CharacterUpdate extends HttpServlet {
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-		int characterId = Integer.parseInt(req.getParameter("characterId"));
-		try (Connection cxn = ConnectionManager.getConnection()) {
-			Character character = CharacterDao.getCharacterById(cxn,
-					characterId);
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Map<String, String> messages = new HashMap<>();
+		req.setAttribute("messages", messages);
+
+		String characterIdStr = req.getParameter("characterId");
+		if (characterIdStr == null || characterIdStr.trim().isEmpty()) {
+			messages.put("error", "Please provide a character ID.");
+			req.getRequestDispatcher("/FindCharacter.jsp").forward(req, resp);
+			return;
+		}
+
+		try (Connection connection = ConnectionManager.getConnection()) {
+			int characterId = Integer.parseInt(characterIdStr);
+			Character character = CharacterDao.getCharacterById(connection, characterId);
+			if (character == null) {
+				messages.put("error", "Character not found.");
+				req.getRequestDispatcher("/FindCharacter.jsp").forward(req, resp);
+				return;
+			}
 			req.setAttribute("character", character);
 		} catch (SQLException e) {
+			messages.put("error", "Error retrieving character: " + e.getMessage());
 			e.printStackTrace();
 		}
+
 		req.getRequestDispatcher("/CharacterUpdate.jsp").forward(req, resp);
 	}
 

@@ -7,14 +7,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
+import cs5200project.dal.CharacterDao;
 import cs5200project.dal.CharacterJobDao;
-import cs5200project.dal.ConnectionManager;
+import cs5200project.model.Character;
+import cs5200project.util.ConnectionManager;
 
 @WebServlet("/characterjoblist")
 public class CharacterJobList extends HttpServlet {
@@ -24,7 +26,15 @@ public class CharacterJobList extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		handleRequest(req, resp);
+		try (Connection connection = ConnectionManager.getConnection()) {
+			List<Character> characters = CharacterDao.getCharactersByLastName(connection, "%", "name");
+			req.setAttribute("characters", characters);
+		} catch (SQLException e) {
+			req.setAttribute("error", "Error retrieving characters: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		req.getRequestDispatcher("/CharacterJobList.jsp").forward(req, resp);
 	}
 
 	@Override

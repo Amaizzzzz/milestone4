@@ -48,13 +48,11 @@ public class ConsumableDao {
   // Fetch a consumable by item ID
 	public static Consumable getByConsumablesId(Connection cxn, int itemID)
 			throws SQLException {
-		String query = """
-				SELECT i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity,
-				       c.consumablesType, c.description, c.source
-				FROM `Item` i
-				JOIN `Consumable` c ON i.itemID = c.itemID
-				WHERE i.itemID = ?
-				""";
+		String query = "SELECT i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity, " +
+				"c.consumablesType, c.description, c.source " +
+				"FROM `Item` i " +
+				"JOIN `Consumable` c ON i.itemID = c.itemID " +
+				"WHERE i.itemID = ?";
     try (PreparedStatement stmt = cxn.prepareStatement(query)) {
       stmt.setInt(1, itemID);
       try (ResultSet rs = stmt.executeQuery()) {
@@ -79,13 +77,11 @@ public class ConsumableDao {
   // Get all consumables of a specific type
   public static List<Consumable> getConsumablesByType(Connection cxn, ConsumablesType type) 
       throws SQLException {
-    String query = """
-            SELECT i.itemID, i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity,
-                   c.description, c.source
-            FROM `Item` i
-            JOIN `Consumable` c ON i.itemID = c.itemID
-            WHERE c.consumablesType = ?
-            """;
+    String query = "SELECT i.itemID, i.itemName, i.itemLevel, i.maxStackSize, i.price, i.quantity, " +
+            "c.description, c.source " +
+            "FROM `Item` i " +
+            "JOIN `Consumable` c ON i.itemID = c.itemID " +
+            "WHERE c.consumablesType = ?";
     
     List<Consumable> consumables = new ArrayList<>();
     
@@ -120,5 +116,34 @@ public class ConsumableDao {
   
   public static void delete(Connection cxn, Consumable consumable) throws SQLException {
     ItemDao.delete(cxn, consumable);
+  }
+
+  public List<Consumable> getConsumablesByDuration(Connection connection, int duration)
+          throws SQLException {
+      String query = "SELECT i.itemID, i.name, i.description, i.source, " +
+              "c.consumableTypeID, c.effectDuration, c.cooldown " +
+              "FROM Item i " +
+              "JOIN Consumable c ON i.itemID = c.itemID " +
+              "WHERE c.effectDuration = ?";
+      try (PreparedStatement statement = connection.prepareStatement(query)) {
+          statement.setInt(1, duration);
+          try (ResultSet rs = statement.executeQuery()) {
+              List<Consumable> consumables = new ArrayList<>();
+              while (rs.next()) {
+                  consumables.add(new Consumable(
+                          rs.getInt("itemID"),
+                          rs.getString("name"),
+                          rs.getInt("itemLevel"),
+                          rs.getInt("maxStackSize"),
+                          rs.getDouble("price"),
+                          rs.getInt("quantity"),
+                          ConsumablesType.valueOf(rs.getString("consumableTypeID")),
+                          rs.getString("description"),
+                          rs.getString("source")
+                  ));
+              }
+              return consumables;
+          }
+      }
   }
 }

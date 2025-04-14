@@ -17,9 +17,8 @@ public class GearStatisticBonusDao {
 
 	public static GearStatisticBonus create(Connection cxn, Gear gear,
 			Statistic stats, int bonusValue) throws SQLException {
-		String insertBonus = """
-				INSERT INTO GearStatisticBonus (itemID, statID, bonusValue)
-				VALUES (?, ?, ?);""";
+		String insertBonus = "INSERT INTO GearStatisticBonus (itemID, statID, bonusValue) " +
+				"VALUES (?, ?, ?);";
 		try (PreparedStatement insertStmt = cxn.prepareStatement(insertBonus)) {
 			insertStmt.setInt(1, gear.getItemId());
 			insertStmt.setInt(2, stats.getStatisticID());
@@ -31,10 +30,8 @@ public class GearStatisticBonusDao {
 
 	public static GearStatisticBonus getGearStatisticBonusByItemIdAndStatId(
 			Connection cxn, Gear gear, Statistic stats) throws SQLException {
-		String selectBonus = """
-				SELECT * FROM GearStatisticBonus
-					WHERE itemID = ? AND statID = ?;
-				""";
+		String selectBonus = "SELECT * FROM GearStatisticBonus " +
+				"WHERE itemID = ? AND statID = ?;";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectBonus)) {
 			selectStmt.setInt(1, gear.getItemId());
 			selectStmt.setInt(2, stats.getStatisticID());

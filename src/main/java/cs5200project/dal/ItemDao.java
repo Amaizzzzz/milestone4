@@ -16,11 +16,8 @@ public class ItemDao {
 
 	public static int create(Connection cxn, String itemName, int itemLevel,
 			int maxStackSize, double price, int quantity) throws SQLException {
-		final String insertItem = """
-				    INSERT INTO Item (itemName, itemLevel, maxStackSize, price, quantity)
-				    VALUES (?, ?, ?, ?, ?);
-				""";
-
+		final String insertItem = "INSERT INTO Item(itemName, itemLevel, maxStackSize, price, quantity) " +
+				"VALUES(?,?,?,?,?)";
 		try (PreparedStatement insertStmt = cxn.prepareStatement(insertItem,
 				Statement.RETURN_GENERATED_KEYS)) {
 			insertStmt.setString(1, itemName);

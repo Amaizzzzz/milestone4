@@ -59,15 +59,13 @@ public class CharacterJobDao {
 			int jobId) throws SQLException {
 		List<Map<String, Object>> result = new ArrayList<>();
 
-		String query = """
-				    SELECT c.characterID, c.firstName, c.lastName, c.currentJobID,
-				           cj.XP, cj.isUnlocked,
-				           j.jobName
-				    FROM CharacterJob cj
-				    JOIN `Character` c ON cj.characterID = c.characterID
-				    JOIN Job j ON cj.jobID = j.jobID
-				    WHERE cj.jobID = ?
-				""";
+		String query = "SELECT c.characterID, c.firstName, c.lastName, c.currentJobID, " +
+				"cj.XP, cj.isUnlocked, " +
+				"j.jobName " +
+				"FROM CharacterJob cj " +
+				"JOIN `Character` c ON cj.characterID = c.characterID " +
+				"JOIN Job j ON cj.jobID = j.jobID " +
+				"WHERE cj.jobID = ?";
 
 		try (PreparedStatement stmt = cxn.prepareStatement(query)) {
 			stmt.setInt(1, jobId);
@@ -91,4 +89,29 @@ public class CharacterJobDao {
 
 		return result;
 	}
+
+    public List<CharacterJob> getCharacterJobs(Connection connection, int characterId) throws SQLException {
+        String query = "SELECT cj.characterID, cj.jobID, cj.isUnlocked, cj.currentXP, " +
+                "lt.levelThresholdID, lt.level, lt.xpThreshold " +
+                "FROM CharacterJob AS cj " +
+                "JOIN LevelThreshold AS lt ON cj.currentXP >= lt.xpThreshold " +
+                "AND cj.currentXP < COALESCE(LEAD(lt.xpThreshold) OVER (ORDER BY lt.xpThreshold), 2147483647) " +
+                "WHERE cj.characterID = ? " +
+                "ORDER BY cj.jobID";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, characterId);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<CharacterJob> jobs = new ArrayList<>();
+                while (rs.next()) {
+                    jobs.add(new CharacterJob(
+                        rs.getInt("characterID"),
+                        rs.getInt("jobID"),
+                        rs.getBoolean("isUnlocked"),
+                        rs.getInt("currentXP")
+                    ));
+                }
+                return jobs;
+            }
+        }
+    }
 }

@@ -13,10 +13,8 @@ public class RaceDao {
 	}
 
 	public static Race create(Connection cxn, String raceName) throws SQLException {
-		final String insertRace = """
-			INSERT INTO Race(raceName)
-			VALUES (?);
-		""";
+		final String insertRace = "INSERT INTO Race(raceName) " +
+				"VALUES (?);";
 
 		try (PreparedStatement insertStmt = cxn.prepareStatement(insertRace,
 				Statement.RETURN_GENERATED_KEYS)) {
@@ -29,10 +27,8 @@ public class RaceDao {
 
 	public static Race getRaceById(Connection cxn, int raceId)
 			throws SQLException {
-		final String selectRace = """
-			SELECT * FROM Race 
-			WHERE raceID = ?;
-		""";
+		final String selectRace = "SELECT * FROM Race " +
+				"WHERE raceID = ?;";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectRace)) {
 			selectStmt.setInt(1, raceId);
 			try (ResultSet results = selectStmt.executeQuery()) {
@@ -47,10 +43,8 @@ public class RaceDao {
 	}
 
 	public static void delete(Connection cxn, Race race) throws SQLException {
-		final String delete = """
-			DELETE FROM Race 
-			WHERE raceID = ?;
-		""";
+		final String delete = "DELETE FROM Race " +
+				"WHERE raceID = ?;";
 		try (PreparedStatement stmt = cxn.prepareStatement(delete)) {
 			stmt.setInt(1, race.getRaceID());
 			stmt.executeUpdate();

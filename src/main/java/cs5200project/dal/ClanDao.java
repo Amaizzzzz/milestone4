@@ -16,15 +16,10 @@ public class ClanDao {
 	}
 
 	public static Clan create(Connection cxn, String clanName, Race race) throws SQLException {
-		final String insertClan = """
-			INSERT INTO Clan(clanName, raceID)
-			VALUES (?, ?);
-		""";
-
-		try (PreparedStatement insertStmt = cxn.prepareStatement(
-			  insertClan,
-			  Statement.RETURN_GENERATED_KEYS
-			)) {
+		final String insertClan = "INSERT INTO Clan(clanName, raceID) " +
+				"VALUES(?,?)";
+		try (PreparedStatement insertStmt = cxn.prepareStatement(insertClan,
+				Statement.RETURN_GENERATED_KEYS)) {
 			insertStmt.setString(1, clanName);
 			insertStmt.setInt(2, race.getRaceID());
 			insertStmt.executeUpdate();
@@ -34,10 +29,9 @@ public class ClanDao {
 	}
 
 	public static Clan getClanById(Connection cxn, Clan clan) throws SQLException {
-		final String selectClan = """
-			SELECT * FROM Clan 
-			  WHERE clanID = ?;
-		""";
+		final String selectClan = "SELECT clanID, name, description " +
+				"FROM Clan " +
+				"WHERE clanID = ?";
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectClan)) {
 			selectStmt.setInt(1, clan.getClanID());
 			try (ResultSet results = selectStmt.executeQuery()) {
@@ -56,10 +50,9 @@ public class ClanDao {
 	}
 
 	public static List<Clan> getClansByRace(Connection cxn, Race race) throws SQLException {
-		final String selectClan = """
-			SELECT * FROM Clan 
-			WHERE raceID = ?;
-		""";
+		final String selectClan = "SELECT clanID, name, description " +
+				"FROM Clan " +
+				"WHERE raceID = ?";
 		List<Clan> clanList = new ArrayList<>();
 		try (PreparedStatement selectStmt = cxn.prepareStatement(selectClan)) {
 			selectStmt.setInt(1, race.getRaceID());
@@ -79,10 +72,8 @@ public class ClanDao {
 	}
 
 	public static void delete(Connection cxn, Clan clan) throws SQLException {
-		final String delete = """
-			DELETE FROM Clan 
-			WHERE clanID = ?;
-		""";
+		final String delete = "DELETE FROM Clan " +
+				"WHERE clanID = ?";
 		try (PreparedStatement stmt = cxn.prepareStatement(delete)) {
 			stmt.setInt(1, clan.getClanID());
 			stmt.executeUpdate();

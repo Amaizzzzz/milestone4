@@ -20,9 +20,8 @@ public class GearInstanceDao {
 
 	public static GearInstance create(Connection cxn, Gear gear,
 			Character character, GearSlot gearSlot) throws SQLException {
-		String insertGearInstance = """
-				INSERT INTO `GearInstance` (itemID, characterID, gearSlotID)
-					VALUES (?, ?, ?)""";
+		String insertGearInstance = "INSERT INTO `GearInstance` (itemID, characterID, gearSlotID) " +
+				"VALUES (?, ?, ?)";
 		try (PreparedStatement stmt = cxn.prepareStatement(insertGearInstance,
 				Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setInt(1, gear.getItemId());
